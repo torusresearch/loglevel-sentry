@@ -21,7 +21,10 @@
   "peerDependencies": {
     "@babel/runtime": "7.x"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@sentry/browser": "^5.29.2",
+    "loglevel": "^1.7.1"
+  },
   "devDependencies": {
     "@babel/cli": "^7.12.10",
     "@babel/core": "^7.12.10",
