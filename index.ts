@@ -1,2 +1,1 @@
-export * from "./src/interfaces";
-export { default } from "./src/log";
+export { default } from "./src/sentry-loglevel";
