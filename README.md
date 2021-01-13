@@ -53,15 +53,68 @@ To use this module:
 1. Install the package
    `npm i @toruslabs/loglevel-sentry`
 
-2. TODO
+2. Create an instance of `TorusLog`
+
+```js
+import TorusLog from "@toruslabs/loglevel-sentry";
+
+const log = new TorusLog({
+   name: "__LOGGER_NAME___"
+});
+
+log.enable();
+log.trace("Class.function". { addtional: "Here is some additional context" });
+log.info("A info message here". { addtional: "Here is some additional context" });
+log.error(new Error("An error"). { addtional: "Here is some additional context" });
+```
+
+(Optional) To enable monitoring, pass `monitorOpts` to `TorusLog`:
+
+```js
+const log = new TorusLog({
+  name: "__LOGGER_NAME___"
+  monitorOpts: {
+    dsn: "__SENTRY_DSN__",
+  },
+});
+```
+
+(Optional) `loglevel` is used as underlying logger by default, to use other logger, use `loggerFactory` while instantiating `TorusLog`:
+
+```js
+const log = new TorusLog({
+  name: "__LOGGER_NAME___",
+  loggerFactory: (name) => {
+     info(msg, data) {
+        pino.info(msg, data);
+     }
+  }
+})
+```
 
 ## Info
 
-// TODO
+This is an opinionated logging/monitoring library:
+
+- There is only 3 methods: `trace`, `info`, and `error`.
+
+- `trace` is for debugging purposes. Trace events are sent for monitoring if enabled, too.
+
+- `info` is for logging purposes. Info events won't be sent for monitoring.
+
+- `error` is for reporting errors. Errors are sent for monitoring, all recently-traced events are linked with the error.
+
+- All events are logged in console (unless you provide custom logger).
+
+- All events receive an additional `data` to send extra contexts about the event.
 
 ## Best practices
 
-// TODO
+- First argument of `trace` and `info` should be a string.
+
+- First argument of `error` should be an error.
+
+- Second argument of all functions should be depth-1 object (object that doesn't contain nested object).
 
 ## Requirements
 

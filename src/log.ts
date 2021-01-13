@@ -49,15 +49,7 @@ export default class TorusLog implements ILogger {
 
   info(msg: string, data?: IData): void {
     if (!this.isActive) return;
-
     this.logger.info(msg, data);
-    this.sentry?.addBreadcrumb({
-      type: "info",
-      message: msg,
-      data,
-      category: Severity.Info,
-      timestamp: Date.now(),
-    });
   }
 
   error(err: Error, data?: IData): void {
