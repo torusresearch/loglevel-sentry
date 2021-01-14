@@ -97,7 +97,7 @@ Though it isn't compulsory, it is recommended to call log functions with followi
 
 - `log.error`: `(err: Error, ...others: any[])`.
 
-If you always want to monitor a specific events, regardless log level, use the plugin API:
+If you always want to monitor a specific event regardless of configured log level, use the plugin API:
 
 ```js
 const sentry = installSentry(logger, {
