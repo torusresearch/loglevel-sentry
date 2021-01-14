@@ -87,7 +87,7 @@ installSentry(logger, {
 
 ## Info
 
-Is 100% compatible with `loglevel` API. Events/errors will be reported only for `trace`, `info`, and `error`.
+Is 100% compatible with `loglevel` API. Events/errors will be reported for all enabled log functions.
 
 ## Best practices
 
@@ -97,7 +97,14 @@ Though it isn't compulsory, it is recommended to call log functions with followi
 
 - `log.error`: `(err: Error, { additional: "" })`.
 
-The extra data should be a flat object (doesn't contain nested objects).
+If you always want to monitor a specific events, regardless log level, use the plugin API:
+
+```js
+const sentry = installSentry(logger, {
+  // Sentry opts.
+});
+sentry.trace("this", "message", "will always be reported.");
+```
 
 ## Requirements
 
