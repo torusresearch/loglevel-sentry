@@ -93,9 +93,9 @@ Is 100% compatible with `loglevel` API. Events/errors will be reported for all e
 
 Though it isn't compulsory, it is recommended to call log functions with following signatures:
 
-- `log.trace` and `log.info`: `(msg: string, { addtional: "" })`.
+- `log.trace`, `log.debug`, `log.info`, and `log.warn`: `(msg: string, ...others: any[])`.
 
-- `log.error`: `(err: Error, { additional: "" })`.
+- `log.error`: `(err: Error, ...others: any[])`.
 
 If you always want to monitor a specific events, regardless log level, use the plugin API:
 
