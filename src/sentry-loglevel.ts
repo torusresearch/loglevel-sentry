@@ -21,6 +21,7 @@ export default function installSentry(logger: Logger, opts: BrowserOptions) {
 
     switch (method) {
       case "trace":
+      case "debug":
       case "info":
         return (...msgs: unknown[]) => {
           sentry.addBreadcrumb({
@@ -46,5 +47,5 @@ export default function installSentry(logger: Logger, opts: BrowserOptions) {
     }
   };
 
-  logger.setLevel(logger.getLevel());
+  logger.setLevel(logger.getLevel() <= logger.levels.INFO ? logger.getLevel() : logger.levels.INFO);
 }
