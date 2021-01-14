@@ -56,7 +56,6 @@ export default function installSentry(logger: Logger, opts: BrowserOptions) {
       case "error":
         return (err: Error, ...msgs: unknown[]) => {
           error(err, ...msgs);
-          if (defaultMethod) defaultMethod(err, ...msgs);
         };
 
       default:
