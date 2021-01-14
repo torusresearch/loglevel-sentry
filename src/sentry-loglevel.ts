@@ -11,17 +11,31 @@ function translateMessage(messages: any[]): Pick<Breadcrumb, "data" | "message">
     : { data: { messages } };
 }
 
+function translateLevel(level: string): Severity {
+  switch (level) {
+    case "info":
+      return Severity.Info;
+    case "warn":
+      return Severity.Warning;
+    default:
+      return Severity.Debug;
+  }
+}
+
 export default function installSentry(logger: Logger, opts: BrowserOptions) {
   const sentry = new Hub(new BrowserClient(opts));
 
   let category = "sentry-loglevel";
-  const trace = (...msgs: unknown[]) => {
+  const log = (level: Severity, ...msgs: unknown[]) => {
     sentry.addBreadcrumb({
       ...translateMessage(msgs),
       category,
-      level: Severity.Debug,
+      level,
       timestamp: Date.now(),
     });
+  };
+  const trace = (...msgs: unknown[]) => {
+    log(Severity.Debug, ...msgs);
   };
   const error = (err: Error, ...msgs: unknown[]) => {
     sentry.withScope((scope) => {
@@ -47,7 +61,7 @@ export default function installSentry(logger: Logger, opts: BrowserOptions) {
 
       default:
         return (...msgs: unknown[]) => {
-          trace(...msgs);
+          log(translateLevel(method), ...msgs);
           if (defaultMethod) defaultMethod(...msgs);
         };
     }
@@ -55,5 +69,5 @@ export default function installSentry(logger: Logger, opts: BrowserOptions) {
 
   logger.setLevel(logger.getLevel());
 
-  return { trace, error };
+  return { log, trace, error };
 }
