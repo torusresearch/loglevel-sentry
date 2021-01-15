@@ -57,14 +57,14 @@ To use this module:
 
 ```js
 import loglevel from "loglevel";
-import installSentry from "@toruslabs/loglevel-sentry";
+import LoglevelSentry from "@toruslabs/loglevel-sentry";
 
 logger = loglevel.getLogger("__LOGGER_NAME__");
-installSentry(logger, {
-  // Sentry opts.
-  dsn: "__SENTRY_DSN__",
-  environment: "production",
+
+const sentry = new LoglevelSentry({
+  /* Sentry opts */
 });
+sentry.install(logger);
 ```
 
 (Optional) You can replace loglevel with other logging library by using loglevel `methodFactory` API:
@@ -72,7 +72,7 @@ installSentry(logger, {
 ```js
 import loglevel from "loglevel";
 import pino from "pino";
-import installSentry from "@toruslabs/loglevel-sentry";
+import LoglevelSentry from "@toruslabs/loglevel-sentry";
 
 const logger = loglevel.getLogger("__LOGGER_NAME__");
 logger.methodFactory = (method, level, name) => {
@@ -80,9 +80,10 @@ logger.methodFactory = (method, level, name) => {
   return alt[method];
 };
 
-installSentry(logger, {
-  // Sentry opts.
+const sentry = new LoglevelSentry({
+  /* Sentry opts */
 });
+sentry.install(logger);
 ```
 
 ## Info
@@ -100,9 +101,11 @@ Though it isn't compulsory, it is recommended to call log functions with followi
 If you always want to monitor a specific event regardless of configured log level, use the plugin API:
 
 ```js
-const sentry = installSentry(logger, {
-  // Sentry opts.
+const sentry = new LoglevelSentry({
+  /* Sentry opts */
 });
+sentry.install(logger);
+
 sentry.trace("this", "message", "will always be reported.");
 ```
 

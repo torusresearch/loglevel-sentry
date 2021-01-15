@@ -1,75 +1,88 @@
 import { Breadcrumb, BrowserClient, BrowserOptions, Hub, Severity } from "@sentry/browser";
 import { Logger } from "loglevel";
 
-function translateMessage(messages: any[]): Pick<Breadcrumb, "data" | "message"> {
-  const [firstMsg, ...otherMsgs] = messages;
-  return typeof firstMsg === "string"
-    ? {
-        message: firstMsg,
-        data: { messages: otherMsgs },
-      }
-    : { data: { messages } };
-}
+export default class LoglevelSentry {
+  private sentry: Hub;
 
-function translateLevel(level: string): Severity {
-  switch (level) {
-    case "info":
-      return Severity.Info;
-    case "warn":
-      return Severity.Warning;
-    default:
-      return Severity.Debug;
+  private category: string;
+
+  constructor(opts: BrowserOptions) {
+    this.sentry = new Hub(new BrowserClient(opts));
+    this.category = "sentry-loglevel";
   }
-}
 
-export default function installSentry(logger: Logger, opts: BrowserOptions) {
-  const sentry = new Hub(new BrowserClient(opts));
+  install(logger: Logger): void {
+    const defaultMethodFactory = logger.methodFactory;
 
-  let category = "sentry-loglevel";
-  const setEnabled = (enabled: boolean) => {
-    sentry.getClient().getOptions().enabled = enabled;
-  };
-  const log = (level: Severity, ...msgs: unknown[]) => {
-    sentry.addBreadcrumb({
-      ...translateMessage(msgs),
-      category,
+    logger.methodFactory = (method, level, name) => {
+      this.category = name.toString();
+
+      const defaultMethod = defaultMethodFactory(method, level, name);
+
+      switch (method) {
+        case "error":
+          return (err: Error, ...msgs: unknown[]) => {
+            this.error(err, ...msgs);
+          };
+
+        default:
+          return (...msgs: unknown[]) => {
+            this.log(LoglevelSentry.translateLevel(method), ...msgs);
+            if (defaultMethod) defaultMethod(...msgs);
+          };
+      }
+    };
+
+    logger.setLevel(logger.getLevel());
+  }
+
+  setEnabled(enabled: boolean): void {
+    this.sentry.getClient().getOptions().enabled = enabled;
+  }
+
+  isEnabled(): boolean {
+    return this.sentry.getClient().getOptions().enabled;
+  }
+
+  log(level: Severity, ...msgs: unknown[]): void {
+    this.sentry.addBreadcrumb({
+      ...LoglevelSentry.translateMessage(msgs),
+      category: this.category,
       level,
       timestamp: Date.now(),
     });
-  };
-  const trace = (...msgs: unknown[]) => {
-    log(Severity.Debug, ...msgs);
-  };
-  const error = (err: Error, ...msgs: unknown[]) => {
-    sentry.withScope((scope) => {
-      scope.setTag("category", category);
-      scope.setExtra("extra", msgs);
-      sentry.captureException(err);
+  }
+
+  trace(...msgs: unknown[]): void {
+    this.log(Severity.Debug, ...msgs);
+  }
+
+  error(err: Error, ...msgs: unknown[]): void {
+    this.sentry.withScope((scope) => {
+      scope.setTag("category", this.category);
+      scope.setExtra("messages", msgs);
+      this.sentry.captureException(err);
     });
-  };
+  }
 
-  const defaultMethodFactory = logger.methodFactory;
+  private static translateMessage(messages: unknown[]): Pick<Breadcrumb, "data" | "message"> {
+    const [firstMsg, ...otherMsgs] = messages;
+    return typeof firstMsg === "string"
+      ? {
+          message: firstMsg,
+          data: { messages: otherMsgs },
+        }
+      : { data: { messages } };
+  }
 
-  logger.methodFactory = (method, level, name) => {
-    category = name.toString();
-
-    const defaultMethod = defaultMethodFactory(method, level, name);
-
-    switch (method) {
-      case "error":
-        return (err: Error, ...msgs: unknown[]) => {
-          error(err, ...msgs);
-        };
-
+  private static translateLevel(level: string): Severity {
+    switch (level) {
+      case "info":
+        return Severity.Info;
+      case "warn":
+        return Severity.Warning;
       default:
-        return (...msgs: unknown[]) => {
-          log(translateLevel(method), ...msgs);
-          if (defaultMethod) defaultMethod(...msgs);
-        };
+        return Severity.Debug;
     }
-  };
-
-  logger.setLevel(logger.getLevel());
-
-  return { setEnabled, log, trace, error };
+  }
 }
