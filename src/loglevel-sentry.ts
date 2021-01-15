@@ -8,7 +8,7 @@ export default class LoglevelSentry {
 
   constructor(opts: BrowserOptions) {
     this.sentry = new Hub(new BrowserClient(opts));
-    this.category = "sentry-loglevel";
+    this.category = "loglevel-sentry";
   }
 
   install(logger: Logger): void {

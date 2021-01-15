@@ -1,1 +1,1 @@
-export { default } from "./src/sentry-loglevel";
+export { default } from "./src/loglevel-sentry";
