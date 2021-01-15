@@ -2,9 +2,9 @@
   "name": "@toruslabs/loglevel-sentry",
   "version": "1.0.0",
   "description": "A package to allow logging and monitoring with sentry",
-  "main": "dist/loglevel-sentry.cjs.js",
-  "unpkg": "dist/loglevel-sentry.umd.min.js",
-  "jsdelivr": "dist/loglevel-sentry.umd.min.js",
+  "main": "dist/@toruslabs/loglevel-sentry.cjs.js",
+  "unpkg": "dist/@toruslabs/loglevel-sentry.umd.min.js",
+  "jsdelivr": "dist/@toruslabs/loglevel-sentry.umd.min.js",
   "types": "types/index.d.ts",
   "scripts": {
     "build:dev": "rimraf dist/ && cross-env NODE_ENV=development parallel-webpack --no-stats",
