@@ -4,7 +4,7 @@ const ESLintPlugin = require("eslint-webpack-plugin");
 
 const pkg = require("./package.json");
 
-const pkgName = pkg.name;
+const pkgName = pkg.name.split("/")[1];
 const libraryName = pkgName.charAt(0).toUpperCase() + pkgName.slice(1);
 
 const { NODE_ENV = "production" } = process.env;
