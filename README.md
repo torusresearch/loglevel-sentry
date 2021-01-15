@@ -53,15 +53,61 @@ To use this module:
 1. Install the package
    `npm i @toruslabs/loglevel-sentry`
 
-2. TODO
+2. Create your `loglevel` instance and install this plugin to enable Sentry:
+
+```js
+import loglevel from "loglevel";
+import LoglevelSentry from "@toruslabs/loglevel-sentry";
+
+logger = loglevel.getLogger("__LOGGER_NAME__");
+
+const sentry = new LoglevelSentry({
+  /* Sentry opts */
+});
+sentry.install(logger);
+```
+
+(Optional) You can replace loglevel with other logging library by using loglevel `methodFactory` API:
+
+```js
+import loglevel from "loglevel";
+import pino from "pino";
+import LoglevelSentry from "@toruslabs/loglevel-sentry";
+
+const logger = loglevel.getLogger("__LOGGER_NAME__");
+logger.methodFactory = (method, level, name) => {
+  const alt = pino(name, level);
+  return alt[method];
+};
+
+const sentry = new LoglevelSentry({
+  /* Sentry opts */
+});
+sentry.install(logger);
+```
 
 ## Info
 
-// TODO
+Is 100% compatible with `loglevel` API. Events/errors will be reported for all enabled log functions.
 
 ## Best practices
 
-// TODO
+Though it isn't compulsory, it is recommended to call log functions with following signatures:
+
+- `log.trace`, `log.debug`, `log.info`, and `log.warn`: `(msg: string, ...others: any[])`.
+
+- `log.error`: `(err: Error, ...others: any[])`.
+
+If you always want to monitor a specific event regardless of configured log level, use the plugin API:
+
+```js
+const sentry = new LoglevelSentry({
+  /* Sentry opts */
+});
+sentry.install(logger);
+
+sentry.trace("this", "message", "will always be reported.");
+```
 
 ## Requirements
 
