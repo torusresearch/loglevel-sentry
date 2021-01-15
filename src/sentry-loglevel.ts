@@ -26,6 +26,9 @@ export default function installSentry(logger: Logger, opts: BrowserOptions) {
   const sentry = new Hub(new BrowserClient(opts));
 
   let category = "sentry-loglevel";
+  const setEnabled = (enabled: boolean) => {
+    sentry.getClient().getOptions().enabled = enabled;
+  };
   const log = (level: Severity, ...msgs: unknown[]) => {
     sentry.addBreadcrumb({
       ...translateMessage(msgs),
@@ -68,5 +71,5 @@ export default function installSentry(logger: Logger, opts: BrowserOptions) {
 
   logger.setLevel(logger.getLevel());
 
-  return { log, trace, error };
+  return { setEnabled, log, trace, error };
 }
