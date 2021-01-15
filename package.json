@@ -22,7 +22,7 @@
     "@babel/runtime": "7.x"
   },
   "dependencies": {
-    "@sentry/browser": "^5.29.2",
+    "@sentry/browser": "^5.30.0",
     "loglevel": "^1.7.1"
   },
   "devDependencies": {
