@@ -23,6 +23,7 @@ export default class LoglevelSentry {
         case "error":
           return (err: Error, ...msgs: unknown[]) => {
             this.error(err, ...msgs);
+            if (defaultMethod) defaultMethod(err, ...msgs);
           };
 
         default:
