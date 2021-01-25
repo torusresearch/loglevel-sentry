@@ -22,9 +22,9 @@ export default class LoglevelSentry {
 
       switch (method) {
         case "error":
-          return (err: Error, ...msgs: unknown[]) => {
-            this.error(err, ...msgs);
-            if (defaultMethod) defaultMethod(err, ...msgs);
+          return (...msgs: unknown[]) => {
+            this.error(...LoglevelSentry.translateError(msgs));
+            if (defaultMethod) defaultMethod(...msgs);
           };
 
         default:
@@ -65,6 +65,13 @@ export default class LoglevelSentry {
       scope.setExtra("messages", msgs);
       this.sentry.captureException(err);
     });
+  }
+
+  private static translateError(messages: unknown[]): [Error, unknown[]] {
+    // Find first Error or create an "unknown" Error to keep stack trace.
+    const index = messages.findIndex((msg) => msg instanceof Error);
+    const err = index !== -1 ? (messages.splice(index, 1)[0] as Error) : new Error("unknown");
+    return [err, messages];
   }
 
   private static translateMessage(messages: unknown[]): Pick<Breadcrumb, "data" | "message"> {
