@@ -10,6 +10,7 @@ export default class LoglevelSentry {
     log(level: Severity, ...msgs: unknown[]): void;
     trace(...msgs: unknown[]): void;
     error(err: Error, ...msgs: unknown[]): void;
+    private static translateError;
     private static translateMessage;
     private static translateLevel;
 }
