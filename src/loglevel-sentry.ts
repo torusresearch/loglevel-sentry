@@ -1,4 +1,5 @@
-import { Breadcrumb, BrowserClient, BrowserOptions, Hub, Severity } from "@sentry/browser";
+import { Hub } from "@sentry/core";
+import { Breadcrumb, Client, Severity } from "@sentry/types";
 import { Logger } from "loglevel";
 
 export default class LoglevelSentry {
@@ -6,8 +7,8 @@ export default class LoglevelSentry {
 
   private category: string;
 
-  constructor(opts: BrowserOptions) {
-    this.sentry = new Hub(new BrowserClient(opts));
+  constructor(client: Client) {
+    this.sentry = new Hub(client);
     this.category = "loglevel-sentry";
   }
 
