@@ -57,13 +57,18 @@ To use this module:
 
 ```js
 import loglevel from "loglevel";
+import { BrowserClient } from "@sentry/browser";
+// Node.js: import { NodeClient } from "@sentry/node";
 import LoglevelSentry from "@toruslabs/loglevel-sentry";
 
 logger = loglevel.getLogger("__LOGGER_NAME__");
 
-const sentry = new LoglevelSentry({
-  /* Sentry opts */
-});
+const sentry = new LoglevelSentry(
+  new BrowserClient({
+    /* Sentry opts */
+  })
+  // Node.js: new NodeClient(...)
+);
 sentry.install(logger);
 ```
 
