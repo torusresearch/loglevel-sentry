@@ -1,3 +1,3 @@
-import { Client } from "@sentry/types";
 import { Logger } from "loglevel";
-export declare function createLogger(name: string, client: Client): Logger;
+import { Sentry } from "./loglevel-sentry";
+export declare function createLogger(name: string, sentry: Sentry): Logger;
