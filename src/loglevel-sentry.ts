@@ -16,7 +16,7 @@ export default class LoglevelSentry {
     const defaultMethodFactory = logger.methodFactory;
 
     logger.methodFactory = (method, level, name) => {
-      this.category = name.toString();
+      if (name) this.category = name.toString();
 
       const defaultMethod = defaultMethodFactory(method, level, name);
 
