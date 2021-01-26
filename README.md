@@ -57,18 +57,13 @@ To use this module:
 
 ```js
 import loglevel from "loglevel";
-import { BrowserClient } from "@sentry/browser";
-// Node.js: import { NodeClient } from "@sentry/node";
-import LoglevelSentry from "@toruslabs/loglevel-sentry";
+import * as Sentry from "@sentry/browser";
+// Node.js: import * as Sentry from "@sentry/node";
+import LoglevelSentryPlugin from "@toruslabs/loglevel-sentry";
 
 logger = loglevel.getLogger("__LOGGER_NAME__");
 
-const sentry = new LoglevelSentry(
-  new BrowserClient({
-    /* Sentry opts */
-  })
-  // Node.js: new NodeClient(...)
-);
+const plugin = new LoglevelSentryPlugin(Sentry);
 sentry.install(logger);
 ```
 
@@ -77,7 +72,9 @@ sentry.install(logger);
 ```js
 import loglevel from "loglevel";
 import pino from "pino";
-import LoglevelSentry from "@toruslabs/loglevel-sentry";
+import * as Sentry from "@sentry/browser";
+// Node.js: import * as Sentry from "@sentry/node";
+import LoglevelSentryPlugin from "@toruslabs/loglevel-sentry";
 
 const logger = loglevel.getLogger("__LOGGER_NAME__");
 logger.methodFactory = (method, level, name) => {
@@ -85,9 +82,7 @@ logger.methodFactory = (method, level, name) => {
   return alt[method];
 };
 
-const sentry = new LoglevelSentry({
-  /* Sentry opts */
-});
+const sentry = new LoglevelSentryPlugin(Sentry);
 sentry.install(logger);
 ```
 
@@ -106,9 +101,7 @@ Though it isn't compulsory, it is recommended to call log functions with followi
 If you always want to monitor a specific event regardless of configured log level, use the plugin API:
 
 ```js
-const sentry = new LoglevelSentry({
-  /* Sentry opts */
-});
+const sentry = new LoglevelSentryPlugin(Sentry);
 sentry.install(logger);
 
 sentry.trace("this", "message", "will always be reported.");
