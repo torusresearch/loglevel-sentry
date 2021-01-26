@@ -1,14 +1,20 @@
 import { Hub } from "@sentry/core";
-import { Breadcrumb, Client, Severity } from "@sentry/types";
+import { Breadcrumb, CaptureContext, Severity } from "@sentry/types";
 import { Logger } from "loglevel";
 
+export interface Sentry {
+  captureException(exception: any, captureContext?: CaptureContext): string;
+  addBreadcrumb(breadcrumb: Breadcrumb): void;
+  getCurrentHub(): Hub;
+}
+
 export default class LoglevelSentry {
-  private sentry: Hub;
+  private sentry: Sentry;
 
   private category: string;
 
-  constructor(client: Client) {
-    this.sentry = new Hub(client);
+  constructor(sentry: Sentry) {
+    this.sentry = sentry;
     this.category = "loglevel-sentry";
   }
 
@@ -23,8 +29,10 @@ export default class LoglevelSentry {
       switch (method) {
         case "error":
           return (...msgs: unknown[]) => {
-            this.error(...LoglevelSentry.translateError(msgs));
-            if (defaultMethod) defaultMethod(...msgs);
+            const [err, messages] = LoglevelSentry.translateError(msgs);
+
+            this.error(err, ...messages);
+            if (defaultMethod) defaultMethod(err, ...messages);
           };
 
         default:
@@ -39,11 +47,11 @@ export default class LoglevelSentry {
   }
 
   setEnabled(enabled: boolean): void {
-    this.sentry.getClient().getOptions().enabled = enabled;
+    this.sentry.getCurrentHub().getClient().getOptions().enabled = enabled;
   }
 
   isEnabled(): boolean {
-    return this.sentry.getClient().getOptions().enabled;
+    return this.sentry.getCurrentHub().getClient().getOptions().enabled;
   }
 
   log(level: Severity, ...msgs: unknown[]): void {
@@ -60,10 +68,9 @@ export default class LoglevelSentry {
   }
 
   error(err: Error, ...msgs: unknown[]): void {
-    this.sentry.withScope((scope) => {
-      scope.setTag("category", this.category);
-      scope.setExtra("messages", msgs);
-      this.sentry.captureException(err);
+    this.sentry.captureException(err, {
+      tags: { logger: this.category },
+      extra: { messages: msgs },
     });
   }
 
