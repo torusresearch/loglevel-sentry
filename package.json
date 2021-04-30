@@ -22,21 +22,21 @@
     "@babel/runtime": "7.x"
   },
   "dependencies": {
-    "@sentry/core": "^6.3.1",
-    "@sentry/types": "^6.3.1",
+    "@sentry/core": "^6.3.4",
+    "@sentry/types": "^6.3.4",
     "loglevel": "^1.7.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.13.16",
-    "@babel/core": "^7.13.16",
+    "@babel/core": "^7.14.0",
     "@babel/eslint-parser": "^7.13.14",
     "@babel/eslint-plugin": "^7.13.16",
     "@babel/plugin-proposal-class-properties": "^7.13.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.13.8",
     "@babel/plugin-transform-runtime": "^7.13.15",
-    "@babel/preset-env": "^7.13.15",
+    "@babel/preset-env": "^7.14.0",
     "@babel/preset-typescript": "^7.13.0",
-    "@babel/runtime-corejs3": "^7.13.17",
+    "@babel/runtime-corejs3": "^7.14.0",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
     "babel-loader": "^8.2.2",
