@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require("path");
 const ESLintPlugin = require("eslint-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 
 const pkg = require("./package.json");
 
@@ -16,7 +17,9 @@ const baseConfig = {
   target: "web",
   output: {
     path: path.resolve(__dirname, "dist"),
-    library: libraryName,
+    library: {
+      name: libraryName,
+    },
   },
   resolve: {
     extensions: [".ts", ".js", ".json"],
@@ -24,11 +27,24 @@ const baseConfig = {
   module: {
     rules: [],
   },
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        extractComments: false,
+      }),
+    ],
+  },
 };
 
 const optimization = {
   optimization: {
     minimize: false,
+    minimizer: [
+      new TerserPlugin({
+        extractComments: false,
+      }),
+    ],
   },
 };
 
@@ -47,7 +63,10 @@ const umdPolyfilledConfig = {
   output: {
     ...baseConfig.output,
     filename: `${pkgName}.polyfill.umd.min.js`,
-    libraryTarget: "umd",
+    library: {
+      ...baseConfig.output.library,
+      type: "umd",
+    },
   },
   module: {
     rules: [babelLoaderWithPolyfills],
@@ -59,7 +78,10 @@ const umdConfig = {
   output: {
     ...baseConfig.output,
     filename: `${pkgName}.umd.min.js`,
-    libraryTarget: "umd",
+    library: {
+      ...baseConfig.output.library,
+      type: "umd",
+    },
   },
   module: {
     rules: [babelLoader],
@@ -72,7 +94,10 @@ const cjsConfig = {
   output: {
     ...baseConfig.output,
     filename: `${pkgName}.cjs.js`,
-    libraryTarget: "commonjs2",
+    library: {
+      ...baseConfig.output.library,
+      type: "commonjs2",
+    },
   },
   module: {
     rules: [babelLoader],
@@ -83,10 +108,6 @@ const cjsConfig = {
       extensions: ".ts",
     }),
   ],
-  node: {
-    ...baseConfig.node,
-    Buffer: false,
-  },
 };
 
 const nodeConfig = {
@@ -95,7 +116,10 @@ const nodeConfig = {
   output: {
     ...baseConfig.output,
     filename: `${pkgName}-node.js`,
-    libraryTarget: "commonjs2",
+    library: {
+      ...baseConfig.output.library,
+      type: "commonjs2",
+    },
   },
   module: {
     rules: [babelLoader],
