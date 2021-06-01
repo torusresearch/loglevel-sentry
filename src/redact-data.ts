@@ -1,6 +1,8 @@
-import { isHex } from "web3-utils";
-
 const defaultPattern = /(private|key|secret|authorization|address|email)+/i;
+
+function isHex(s: string) {
+  return /^(-0x|0x)?[0-9a-f]*$/i.test(s);
+}
 
 export function redactEventData<T = unknown>(data: T, keyPattern = defaultPattern): T {
   if (typeof data !== "object" || data === null) return data;
