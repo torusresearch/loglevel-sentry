@@ -1,6 +1,6 @@
 {
   "name": "@toruslabs/loglevel-sentry",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "A package to allow logging and monitoring with sentry",
   "main": "dist/loglevel-sentry.cjs.js",
   "unpkg": "dist/loglevel-sentry.umd.min.js",
