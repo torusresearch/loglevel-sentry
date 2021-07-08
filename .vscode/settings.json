@@ -1,6 +1,7 @@
 {
   "eslint.options": {
     "extends": [
+      "airbnb-typescript/base",
       "plugin:@typescript-eslint/recommended",
       "standard",
       "eslint:recommended",
@@ -9,21 +10,15 @@
       "plugin:import/typescript",
       "plugin:promise/recommended",
       "airbnb-base",
-      "plugin:prettier/recommended"
+      "plugin:prettier/recommended",
+      "prettier"
     ],
-    "plugins": ["@babel", "promise", "import", "simple-import-sort", "@typescript-eslint", "prettier"],
+    "plugins": ["promise", "import", "simple-import-sort", "@typescript-eslint", "prettier"],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
       "sourceType": "module",
       "ecmaVersion": 11,
       "project": "./tsconfig.json"
-    },
-    "settings": {
-      "import/resolver": {
-        "node": {
-          "extensions": [".js", ".jsx", ".ts", ".tsx", ".json"]
-        }
-      }
     },
     "rules": {
       "camelcase": 0,
@@ -70,10 +65,16 @@
         }
       ]
     },
+    "settings": {
+      "import/resolver": {
+        "node": {
+          "extensions": [".js", ".jsx", ".ts", ".tsx", ".json"]
+        }
+      }
+    },
     "env": {
       "es6": true,
-      "browser": true,
-      "serviceworker": true
+      "browser": true
     }
   }
 }
