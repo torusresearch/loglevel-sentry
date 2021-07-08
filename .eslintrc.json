@@ -1,5 +1,6 @@
 {
   "extends": [
+    "airbnb-typescript/base",
     "plugin:@typescript-eslint/recommended",
     "standard",
     "eslint:recommended",
@@ -8,9 +9,10 @@
     "plugin:import/typescript",
     "plugin:promise/recommended",
     "airbnb-base",
-    "plugin:prettier/recommended"
+    "plugin:prettier/recommended",
+    "prettier"
   ],
-  "plugins": ["@babel", "promise", "import", "simple-import-sort", "@typescript-eslint", "prettier"],
+  "plugins": ["promise", "import", "simple-import-sort", "@typescript-eslint", "prettier"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "sourceType": "module",
