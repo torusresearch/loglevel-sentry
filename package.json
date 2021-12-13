@@ -90,6 +90,6 @@
   "homepage": "https://github.com/torusresearch/loglevel-sentry#readme",
   "engines": {
     "node": ">=14.17.0",
-    "npm": "~6.x"
+    "npm": ">=6.x"
   }
 }
