@@ -2,7 +2,7 @@
 
 const pkg = require("./package.json");
 
-const pkgName = "fetchNodeDetails";
+const pkgName = "loglevelSentry";
 
 exports.baseConfig = {};
 
