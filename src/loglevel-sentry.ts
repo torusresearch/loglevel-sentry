@@ -18,6 +18,34 @@ export default class LoglevelSentry {
     this.category = "loglevel-sentry";
   }
 
+  private static translateError(args: unknown[]): [Error, unknown[]] {
+    // Find first Error or create an "unknown" Error to keep stack trace.
+    const index = args.findIndex((arg) => arg instanceof Error);
+    const err = index !== -1 ? (args.splice(index, 1)[0] as Error) : new Error("unknown");
+    return [err, args];
+  }
+
+  private static translateArgs(args: unknown[]): Pick<Breadcrumb, "data" | "message"> {
+    const [firstArg, ...otherArgs] = args;
+    return typeof firstArg === "string"
+      ? {
+          message: firstArg,
+          data: { arguments: otherArgs },
+        }
+      : { data: { arguments: args } };
+  }
+
+  private static translateLevel(level: string): Severity {
+    switch (level) {
+      case "info":
+        return Severity.Info;
+      case "warn":
+        return Severity.Warning;
+      default:
+        return Severity.Debug;
+    }
+  }
+
   install(logger: Logger): void {
     const defaultMethodFactory = logger.methodFactory;
 
@@ -72,33 +100,5 @@ export default class LoglevelSentry {
       tags: { logger: "loglevel-sentry", "logger.name": this.category },
       extra: { arguments: args },
     });
-  }
-
-  private static translateError(args: unknown[]): [Error, unknown[]] {
-    // Find first Error or create an "unknown" Error to keep stack trace.
-    const index = args.findIndex((arg) => arg instanceof Error);
-    const err = index !== -1 ? (args.splice(index, 1)[0] as Error) : new Error("unknown");
-    return [err, args];
-  }
-
-  private static translateArgs(args: unknown[]): Pick<Breadcrumb, "data" | "message"> {
-    const [firstArg, ...otherArgs] = args;
-    return typeof firstArg === "string"
-      ? {
-          message: firstArg,
-          data: { arguments: otherArgs },
-        }
-      : { data: { arguments: args } };
-  }
-
-  private static translateLevel(level: string): Severity {
-    switch (level) {
-      case "info":
-        return Severity.Info;
-      case "warn":
-        return Severity.Warning;
-      default:
-        return Severity.Debug;
-    }
   }
 }
