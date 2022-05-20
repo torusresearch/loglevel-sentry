@@ -12,7 +12,9 @@ exports.nodeConfig = {
   },
   output: {
     filename: `${pkgName}-node.js`,
-    libraryTarget: "commonjs2",
+    library: {
+      type: "commonjs2",
+    },
   },
   externals: [...Object.keys(pkg.dependencies), /^(@babel\/runtime)/i],
   target: "node",
