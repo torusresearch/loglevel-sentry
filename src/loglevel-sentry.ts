@@ -1,5 +1,5 @@
-import { Hub } from "@sentry/core";
-import { Breadcrumb, CaptureContext, SeverityLevel } from "@sentry/types";
+import type { Hub } from "@sentry/core";
+import type { Breadcrumb, CaptureContext, SeverityLevel } from "@sentry/types";
 import { Logger } from "loglevel";
 
 export interface Sentry {
