@@ -22,15 +22,15 @@
   ],
   "peerDependencies": {
     "@babel/runtime": "7.x",
-    "@sentry/core": "6.x",
-    "@sentry/types": "6.x"
+    "@sentry/core": "7.x",
+    "@sentry/types": "7.x"
   },
   "dependencies": {
     "loglevel": "^1.8.0"
   },
   "devDependencies": {
-    "@sentry/core": "^6.19.7",
-    "@sentry/types": "^6.19.7",
+    "@sentry/core": "^7.0.0",
+    "@sentry/types": "^7.0.0",
     "@toruslabs/eslint-config-typescript": "^1.0.0",
     "@toruslabs/torus-scripts": "^1.0.3",
     "@typescript-eslint/eslint-plugin": "^5.25.0",

@@ -1,5 +1,5 @@
 import { Hub } from "@sentry/core";
-import { Breadcrumb, CaptureContext, Severity } from "@sentry/types";
+import { Breadcrumb, CaptureContext, SeverityLevel } from "@sentry/types";
 import { Logger } from "loglevel";
 
 export interface Sentry {
@@ -35,14 +35,14 @@ export default class LoglevelSentry {
       : { data: { arguments: args } };
   }
 
-  private static translateLevel(level: string): Severity {
+  private static translateLevel(level: string): SeverityLevel {
     switch (level) {
       case "info":
-        return Severity.Info;
+        return "info";
       case "warn":
-        return Severity.Warning;
+        return "warning";
       default:
-        return Severity.Debug;
+        return "debug";
     }
   }
 
@@ -82,7 +82,7 @@ export default class LoglevelSentry {
     return this.sentry.getCurrentHub().getClient().getOptions().enabled;
   }
 
-  log(level: Severity, ...args: unknown[]): void {
+  log(level: SeverityLevel, ...args: unknown[]): void {
     this.sentry.addBreadcrumb({
       ...LoglevelSentry.translateArgs(args),
       category: this.category,
@@ -92,7 +92,7 @@ export default class LoglevelSentry {
   }
 
   trace(...args: unknown[]): void {
-    this.log(Severity.Debug, ...args);
+    this.log("debug", ...args);
   }
 
   error(err: Error, ...args: unknown[]): void {
