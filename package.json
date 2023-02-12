@@ -32,7 +32,7 @@
     "@sentry/core": "^7.0.0",
     "@sentry/types": "^7.0.0",
     "@toruslabs/eslint-config-typescript": "^1.0.1",
-    "@toruslabs/torus-scripts": "^1.0.3",
+    "@toruslabs/torus-scripts": "^3.0.2",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",
     "cross-env": "^7.0.3",
