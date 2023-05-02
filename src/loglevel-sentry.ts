@@ -3,7 +3,7 @@ import type { Breadcrumb, CaptureContext, SeverityLevel } from "@sentry/types";
 import { Logger } from "loglevel";
 
 export interface Sentry {
-  captureException(exception: any, captureContext?: CaptureContext): string;
+  captureException(exception: unknown, captureContext?: CaptureContext): string;
   addBreadcrumb(breadcrumb: Breadcrumb): void;
   getCurrentHub(): Hub;
 }
