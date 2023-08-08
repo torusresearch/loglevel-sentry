@@ -7,11 +7,11 @@ function isHex(s: string) {
 export function redactEventData<T = unknown>(data: T, keyPattern = defaultPattern): T {
   if (typeof data !== "object" || data === null) return data;
 
-  const keys = Object.keys(data);
+  const keys = Object.keys(data) as (keyof T)[];
 
   for (const k of keys) {
     const v = data[k];
-    if (typeof v === "string" && keyPattern.test(k)) data[k] = "***";
+    if (typeof v === "string" && keyPattern.test(k as string)) data[k] = "***" as (T & object)[keyof T];
     else data[k] = redactEventData(v, keyPattern);
   }
 
