@@ -21,16 +21,31 @@ export default class LoglevelSentry {
   private static translateError(args: unknown[]): [Error, unknown[]] {
     // Find first Error or create an "unknown" Error to keep stack trace.
     const index = args.findIndex((arg) => arg instanceof Error);
-    const err = index !== -1 ? (args.splice(index, 1)[0] as Error) : new Error("unknown");
+    const msgIndex = args.findIndex((arg) => typeof arg === "string");
+    const apiErrorIndex = args.findIndex((arg) => arg && typeof arg === "object" && "status" in arg && "type" in arg);
+    let err: Error;
+    if (apiErrorIndex !== -1) {
+      const apiError = args.splice(apiErrorIndex, 1)[0] as Response;
+      err = new Error(`${apiError.status} ${apiError.type.toString()} ${apiError.statusText}`);
+      args.push(apiError.url);
+    } else if (index !== -1) {
+      err = args.splice(index, 1)[0] as Error;
+    } else if (msgIndex !== -1) {
+      err = new Error(args.splice(msgIndex, 1)[0] as string);
+    } else {
+      err = new Error("Unknown error");
+    }
     return [err, args];
   }
 
   private static translateArgs(args: unknown[]): Pick<Breadcrumb, "data" | "message"> {
-    const [firstArg, ...otherArgs] = args;
-    return typeof firstArg === "string"
+    const msgIndex = args.findIndex((arg) => typeof arg === "string");
+    const firstMsg = msgIndex !== -1 ? (args.splice(msgIndex, 1)[0] as string) : undefined;
+    return firstMsg
       ? {
-          message: firstArg,
-          data: { arguments: otherArgs },
+          message: firstMsg,
+          // args is already spliced
+          data: { arguments: args },
         }
       : { data: { arguments: args } };
   }
