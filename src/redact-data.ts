@@ -1,10 +1,12 @@
+import { normalize } from "@sentry/utils";
+
 const defaultPattern = /(private|key|secret|authorization|address|email)+/i;
 
 function isHex(s: string) {
   return /^(-0x|0x)?[0-9a-f]*$/i.test(s);
 }
 
-export function redactEventData<T = unknown>(data: T, keyPattern = defaultPattern): T {
+function redactInternalEventData<T = unknown>(data: T, keyPattern = defaultPattern): T {
   if (typeof data !== "object" || data === null) return data;
 
   const keys = Object.keys(data) as (keyof T)[];
@@ -12,15 +14,18 @@ export function redactEventData<T = unknown>(data: T, keyPattern = defaultPatter
   for (const k of keys) {
     const v = data[k];
     if (typeof v === "string" && keyPattern.test(k as string)) data[k] = "***" as (T & object)[keyof T];
-    else data[k] = redactEventData(v, keyPattern);
+    else data[k] = redactInternalEventData(v, keyPattern);
   }
 
   return data;
 }
 
-export function redactBreadcrumbData<T = unknown>(data: T): T {
-  if (!data) return data;
+export function redactEventData<T = unknown>(data: T, keyPattern = defaultPattern, maxDepth = 8): T {
+  const normalizedData = normalize(data, maxDepth);
+  return redactInternalEventData(normalizedData, keyPattern);
+}
 
+function redactInternalBreadcrumbData<T = unknown>(data: T): T {
   let result = data;
   if (typeof data === "object") {
     result = { ...data };
@@ -38,16 +43,20 @@ export function redactBreadcrumbData<T = unknown>(data: T): T {
         // Workaround TypeScript limitation to map types between `data` and `result`
         result[k] = "***" as unknown as T[Extract<keyof T, string>];
       } else {
-        result[k] = redactBreadcrumbData(v);
+        try {
+          result[k] = redactInternalBreadcrumbData(v);
+        } catch (error) {
+          // We are not able to redact the value
+          result[k] = "***" as unknown as T[Extract<keyof T, string>];
+        }
       }
     }
   }
   return result;
 }
 
-/**
- * @deprecated Use `redactEventData` instead
- */
-export function redactData<T = unknown>(data: T, keyPattern = defaultPattern): T {
-  return redactEventData(data, keyPattern);
+export function redactBreadcrumbData<T = unknown>(data: T, maxDepth = 8): T {
+  if (!data) return data;
+  const normalizedData = normalize(data, maxDepth);
+  return redactInternalBreadcrumbData(normalizedData);
 }
