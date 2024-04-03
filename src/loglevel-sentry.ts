@@ -1,8 +1,10 @@
 import type { Hub } from "@sentry/core";
-import type { Breadcrumb, CaptureContext, SeverityLevel } from "@sentry/types";
+import type { Breadcrumb, CaptureContext, Client, SeverityLevel } from "@sentry/types";
+import { normalize } from "@sentry/utils";
 import { Logger } from "loglevel";
 
 export interface Sentry {
+  getClient<C extends Client>(): C | undefined;
   captureException(exception: unknown, captureContext?: CaptureContext): string;
   addBreadcrumb(breadcrumb: Breadcrumb): void;
   getCurrentHub(): Hub;
@@ -18,16 +20,23 @@ export default class LoglevelSentry {
     this.category = "loglevel-sentry";
   }
 
-  private static translateError(args: unknown[]): [Error, unknown[]] {
+  private static async translateError(args: unknown[]): Promise<[Error, unknown[]]> {
     // Find first Error or create an "unknown" Error to keep stack trace.
     const index = args.findIndex((arg) => arg instanceof Error);
     const msgIndex = args.findIndex((arg) => typeof arg === "string");
-    const apiErrorIndex = args.findIndex((arg) => arg && typeof arg === "object" && "status" in arg && "type" in arg);
+    const isAPIError = args.findIndex((arg) => arg && typeof arg === "object" && "status" in arg && "type" in arg);
     let err: Error;
-    if (apiErrorIndex !== -1) {
-      const apiError = args.splice(apiErrorIndex, 1)[0] as Response;
-      err = new Error(`${apiError.status} ${apiError.type.toString()} ${apiError.statusText}`);
-      args.push(apiError.url);
+    if (isAPIError !== -1) {
+      const apiError = args[isAPIError] as Response;
+      const contentType = apiError.headers?.get("content-type");
+      if (contentType.includes("application/json")) {
+        const errJson = await apiError.json();
+        err = new Error(errJson?.error || errJson?.message || JSON.stringify(errJson));
+      } else if (contentType.includes("text/plain")) {
+        err = new Error(await apiError.text());
+      } else {
+        err = new Error(`${apiError.status} ${apiError.type.toString()} ${apiError.statusText}`);
+      }
     } else if (index !== -1) {
       err = args.splice(index, 1)[0] as Error;
     } else if (msgIndex !== -1) {
@@ -69,19 +78,29 @@ export default class LoglevelSentry {
 
       const defaultMethod = defaultMethodFactory(method, level, name);
 
+      const overrideDefaultMethod = (...args: unknown[]) => {
+        let logData: Record<string, unknown> = { timestamp: new Date(), level: method.toUpperCase(), logger: name };
+        if (method === "error" && args.length >= 1 && args[0] instanceof Error) {
+          logData = { ...logData, message: args[0].message ?? "", stack: args[0].stack, extra: args.length > 1 ? args.slice(1) : undefined };
+        } else {
+          logData = { ...logData, message: args[0] ?? "", extra: args.length > 1 ? args.slice(1) : undefined };
+        }
+        defaultMethod(JSON.stringify(normalize(logData)));
+      };
+
       switch (method) {
         case "error":
-          return (...args: unknown[]) => {
-            const [err, otherArgs] = LoglevelSentry.translateError(args);
+          return async (...args: unknown[]) => {
+            const [err, otherArgs] = await LoglevelSentry.translateError(args);
 
             this.error(err, ...otherArgs);
-            if (defaultMethod) defaultMethod(err, ...otherArgs);
+            if (overrideDefaultMethod) overrideDefaultMethod(err, ...otherArgs);
           };
 
         default:
           return (...args: unknown[]) => {
             this.log(LoglevelSentry.translateLevel(method), ...args);
-            if (defaultMethod) defaultMethod(...args);
+            if (overrideDefaultMethod) overrideDefaultMethod(...args);
           };
       }
     };
@@ -90,11 +109,11 @@ export default class LoglevelSentry {
   }
 
   setEnabled(enabled: boolean): void {
-    this.sentry.getCurrentHub().getClient().getOptions().enabled = enabled;
+    this.sentry.getClient().getOptions().enabled = enabled;
   }
 
   isEnabled(): boolean {
-    return this.sentry.getCurrentHub().getClient().getOptions().enabled;
+    return this.sentry.getClient().getOptions().enabled;
   }
 
   log(level: SeverityLevel, ...args: unknown[]): void {
