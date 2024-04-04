@@ -95,6 +95,7 @@ export default class LoglevelSentry {
 
     logger.methodFactory = (method, level, name) => {
       if (name) this.category = name.toString();
+      const defaultMethod = defaultMethodFactory(method, level, name);
 
       const overrideDefaultMethod = (...args: unknown[]) => {
         let logData: Record<string, unknown> = { timestamp: new Date(), level: method.toUpperCase(), logger: name };
@@ -103,7 +104,7 @@ export default class LoglevelSentry {
         } else {
           logData = { ...logData, message: args[0] ?? "", extra: args.length > 1 ? args.slice(1) : undefined };
         }
-        defaultMethodFactory(method, level, name)(JSON.stringify(normalize(logData)));
+        if (defaultMethod) defaultMethod(JSON.stringify(normalize(logData)));
       };
 
       switch (method) {
@@ -112,13 +113,19 @@ export default class LoglevelSentry {
             const [err, otherArgs] = await LoglevelSentry.translateError(args);
 
             this.error(err, ...otherArgs);
-            overrideDefaultMethod(err, ...otherArgs);
+            // keep behavior consistent to console in browser
+            if (typeof window !== "undefined") {
+              if (defaultMethod) defaultMethod(err, ...otherArgs);
+            } else overrideDefaultMethod(err, ...otherArgs);
           };
 
         default:
           return (...args: unknown[]) => {
             this.log(LoglevelSentry.translateLevel(method), ...args);
-            overrideDefaultMethod(...args);
+            // keep behavior consistent to console in browser
+            if (typeof window !== "undefined") {
+              if (defaultMethod) defaultMethod(...args);
+            } else overrideDefaultMethod(...args);
           };
       }
     };
