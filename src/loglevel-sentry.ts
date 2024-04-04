@@ -10,6 +10,12 @@ export interface Sentry {
   getCurrentHub(): Hub;
 }
 
+interface AxiosResponse {
+  data: unknown;
+  status: number;
+  headers: Record<string, string>;
+}
+
 export default class LoglevelSentry {
   private sentry: Sentry;
 
@@ -24,10 +30,11 @@ export default class LoglevelSentry {
     // Find first Error or create an "unknown" Error to keep stack trace.
     const index = args.findIndex((arg) => arg instanceof Error);
     const msgIndex = args.findIndex((arg) => typeof arg === "string");
-    const isAPIError = args.findIndex((arg) => arg && typeof arg === "object" && "status" in arg && "type" in arg);
+    const apiErrorIdx = args.findIndex((arg) => arg && typeof arg === "object" && "status" in arg && "type" in arg);
+    const axiosErrorIdx = args.findIndex((arg) => arg && typeof arg === "object" && "isAxiosError" in arg && arg.isAxiosError === true);
     let err: Error;
-    if (isAPIError !== -1) {
-      const apiError = args[isAPIError] as Response;
+    if (apiErrorIdx !== -1) {
+      const apiError = args[apiErrorIdx] as Response;
       const contentType = apiError.headers?.get("content-type");
       if (contentType.includes("application/json")) {
         const errJson = await apiError.json();
@@ -36,6 +43,19 @@ export default class LoglevelSentry {
         err = new Error(await apiError.text());
       } else {
         err = new Error(`${apiError.status} ${apiError.type.toString()} ${apiError.statusText}`);
+      }
+    } else if (axiosErrorIdx !== -1) {
+      const axiosError = args[axiosErrorIdx] as { response: AxiosResponse };
+      const errorResponse = axiosError.response;
+      const contentType = errorResponse.headers?.["content-type"];
+      if (contentType.includes("application/json")) {
+        const errJson = errorResponse.data as object;
+        const errorMsg = "error" in errJson ? errJson.error : "message" in errJson ? errJson.message : JSON.stringify(errJson);
+        err = new Error(errorMsg as string);
+      } else if (contentType.includes("text/plain")) {
+        err = new Error(errorResponse.data as string);
+      } else {
+        err = new Error(`${errorResponse.status} ${errorResponse.data.toString()}`);
       }
     } else if (index !== -1) {
       err = args.splice(index, 1)[0] as Error;
@@ -76,8 +96,6 @@ export default class LoglevelSentry {
     logger.methodFactory = (method, level, name) => {
       if (name) this.category = name.toString();
 
-      const defaultMethod = defaultMethodFactory(method, level, name);
-
       const overrideDefaultMethod = (...args: unknown[]) => {
         let logData: Record<string, unknown> = { timestamp: new Date(), level: method.toUpperCase(), logger: name };
         if (method === "error" && args.length >= 1 && args[0] instanceof Error) {
@@ -85,7 +103,7 @@ export default class LoglevelSentry {
         } else {
           logData = { ...logData, message: args[0] ?? "", extra: args.length > 1 ? args.slice(1) : undefined };
         }
-        defaultMethod(JSON.stringify(normalize(logData)));
+        defaultMethodFactory(method, level, name)(JSON.stringify(normalize(logData)));
       };
 
       switch (method) {
@@ -94,13 +112,13 @@ export default class LoglevelSentry {
             const [err, otherArgs] = await LoglevelSentry.translateError(args);
 
             this.error(err, ...otherArgs);
-            if (overrideDefaultMethod) overrideDefaultMethod(err, ...otherArgs);
+            overrideDefaultMethod(err, ...otherArgs);
           };
 
         default:
           return (...args: unknown[]) => {
             this.log(LoglevelSentry.translateLevel(method), ...args);
-            if (overrideDefaultMethod) overrideDefaultMethod(...args);
+            overrideDefaultMethod(...args);
           };
       }
     };
