@@ -1,5 +1,5 @@
 import type { Hub } from "@sentry/core";
-import type { Breadcrumb, CaptureContext, Client, Scope, SeverityLevel } from "@sentry/types";
+import type { Breadcrumb, CaptureContext, Client, Scope, SeverityLevel, Span } from "@sentry/types";
 import { normalize } from "@sentry/utils";
 import { Logger } from "loglevel";
 
@@ -9,6 +9,7 @@ export interface Sentry {
   addBreadcrumb(breadcrumb: Breadcrumb): void;
   getCurrentHub(): Hub; // deprecated?
   getCurrentScope(): Scope;
+  getActiveSpan(): Span | undefined;
 }
 
 interface AxiosResponse {
@@ -100,7 +101,8 @@ export default class LoglevelSentry {
 
       const overrideDefaultMethod = (...args: unknown[]) => {
         const { requestId } = this.sentry.getCurrentScope().getScopeData().extra;
-        let logData: Record<string, unknown> = { timestamp: new Date(), level: method.toUpperCase(), logger: name, requestId };
+        const { traceId, spanId } = this.sentry.getActiveSpan()?.spanContext() || {};
+        let logData: Record<string, unknown> = { timestamp: new Date(), level: method.toUpperCase(), logger: name, requestId, traceId, spanId };
         if (method === "error" && args.length >= 1 && args[0] instanceof Error) {
           logData = { ...logData, message: args[0].message ?? "", stack: args[0].stack, extra: args.length > 1 ? args.slice(1) : undefined };
         } else {
