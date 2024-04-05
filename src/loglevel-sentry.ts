@@ -1,4 +1,3 @@
-import type { Hub } from "@sentry/core";
 import type { Breadcrumb, CaptureContext, Client, Scope, SeverityLevel, Span } from "@sentry/types";
 import { normalize } from "@sentry/utils";
 import { Logger } from "loglevel";
@@ -7,7 +6,6 @@ export interface Sentry {
   getClient<C extends Client>(): C | undefined;
   captureException(exception: unknown, captureContext?: CaptureContext): string;
   addBreadcrumb(breadcrumb: Breadcrumb): void;
-  getCurrentHub(): Hub; // deprecated?
   getCurrentScope(): Scope;
   getActiveSpan(): Span | undefined;
 }
