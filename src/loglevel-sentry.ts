@@ -98,9 +98,8 @@ export default class LoglevelSentry {
       const defaultMethod = defaultMethodFactory(method, level, name);
 
       const overrideDefaultMethod = (...args: unknown[]) => {
-        const { requestId } = this.sentry.getCurrentScope().getScopeData().extra;
         const { traceId, spanId } = this.sentry.getActiveSpan()?.spanContext() || {};
-        let logData: Record<string, unknown> = { timestamp: new Date(), level: method.toUpperCase(), logger: name, requestId, traceId, spanId };
+        let logData: Record<string, unknown> = { timestamp: new Date(), level: method.toUpperCase(), logger: name, traceId, spanId };
         if (method === "error" && args.length >= 1 && args[0] instanceof Error) {
           logData = { ...logData, message: args[0].message ?? "", stack: args[0].stack, extra: args.length > 1 ? args.slice(1) : undefined };
         } else {
