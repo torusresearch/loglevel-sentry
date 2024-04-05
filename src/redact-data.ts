@@ -1,6 +1,6 @@
 import { normalize } from "@sentry/utils";
 
-const defaultPattern = /(private|key|secret|authorization|address|email)+/i;
+const defaultPattern = /(private|key|secret|authorization|address|email|login_hint)+/i;
 
 function isHex(s: string) {
   return /^(-0x|0x)?[0-9a-f]*$/i.test(s);
