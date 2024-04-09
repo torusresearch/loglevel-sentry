@@ -1,5 +1,4 @@
-import type { Hub } from "@sentry/core";
-import type { Breadcrumb, CaptureContext, Client, SeverityLevel } from "@sentry/types";
+import type { Breadcrumb, CaptureContext, Client, Scope, SeverityLevel, Span } from "@sentry/types";
 import { normalize } from "@sentry/utils";
 import { Logger } from "loglevel";
 
@@ -7,7 +6,8 @@ export interface Sentry {
   getClient<C extends Client>(): C | undefined;
   captureException(exception: unknown, captureContext?: CaptureContext): string;
   addBreadcrumb(breadcrumb: Breadcrumb): void;
-  getCurrentHub(): Hub;
+  getCurrentScope(): Scope;
+  getActiveSpan(): Span | undefined;
 }
 
 interface AxiosResponse {
@@ -97,14 +97,30 @@ export default class LoglevelSentry {
       if (name) this.category = name.toString();
       const defaultMethod = defaultMethodFactory(method, level, name);
 
+      const isFrontend = typeof window !== "undefined";
+
       const overrideDefaultMethod = (...args: unknown[]) => {
-        let logData: Record<string, unknown> = { timestamp: new Date(), level: method.toUpperCase(), logger: name };
-        if (method === "error" && args.length >= 1 && args[0] instanceof Error) {
-          logData = { ...logData, message: args[0].message ?? "", stack: args[0].stack, extra: args.length > 1 ? args.slice(1) : undefined };
+        const { traceId, spanId } = this.sentry.getActiveSpan()?.spanContext() || {};
+        const isError = method === "error" && args.length >= 1 && args[0] instanceof Error;
+        if (isFrontend) {
+          if (isError) {
+            const error = args[0] as Error;
+            const newError = new Error(`${error.message}: ${traceId} - ${spanId}`, { cause: error });
+            const newArgs = [newError, ...args.slice(1)];
+            if (defaultMethod) defaultMethod(...newArgs);
+            return;
+          }
+          if (defaultMethod) defaultMethod(...args);
         } else {
-          logData = { ...logData, message: args[0] ?? "", extra: args.length > 1 ? args.slice(1) : undefined };
+          let logData: Record<string, unknown> = { timestamp: new Date(), level: method.toUpperCase(), logger: name, traceId, spanId };
+          if (isError) {
+            const error = args[0] as Error;
+            logData = { ...logData, message: error.message ?? "", stack: error.stack, extra: args.length > 1 ? args.slice(1) : undefined };
+          } else {
+            logData = { ...logData, message: args[0] ?? "", extra: args.length > 1 ? args.slice(1) : undefined };
+          }
+          if (defaultMethod) defaultMethod(JSON.stringify(normalize(logData)));
         }
-        if (defaultMethod) defaultMethod(JSON.stringify(normalize(logData)));
       };
 
       switch (method) {
@@ -113,19 +129,14 @@ export default class LoglevelSentry {
             const [err, otherArgs] = await LoglevelSentry.translateError(args);
 
             this.error(err, ...otherArgs);
-            // keep behavior consistent to console in browser
-            if (typeof window !== "undefined") {
-              if (defaultMethod) defaultMethod(err, ...otherArgs);
-            } else overrideDefaultMethod(err, ...otherArgs);
+            overrideDefaultMethod(err, ...otherArgs);
           };
 
         default:
           return (...args: unknown[]) => {
             this.log(LoglevelSentry.translateLevel(method), ...args);
             // keep behavior consistent to console in browser
-            if (typeof window !== "undefined") {
-              if (defaultMethod) defaultMethod(...args);
-            } else overrideDefaultMethod(...args);
+            overrideDefaultMethod(...args);
           };
       }
     };
