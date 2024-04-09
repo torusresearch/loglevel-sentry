@@ -100,7 +100,7 @@ export default class LoglevelSentry {
       const isFrontend = typeof window !== "undefined";
 
       const overrideDefaultMethod = (...args: unknown[]) => {
-        const { traceId, spanId } = this.sentry.getActiveSpan().spanContext() || {};
+        const { traceId, spanId } = this.sentry.getActiveSpan()?.spanContext() || {};
         const isError = method === "error" && args.length >= 1 && args[0] instanceof Error;
         if (isFrontend) {
           if (isError) {
