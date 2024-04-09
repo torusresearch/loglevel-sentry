@@ -105,7 +105,7 @@ export default class LoglevelSentry {
         if (isFrontend) {
           if (isError) {
             const error = args[0] as Error;
-            const newError = new Error(`${error.message}: ${traceId} - ${spanId}`, { cause: error });
+            const newError = new Error(`${error.message}: traceId: ${traceId} - spanId: ${spanId}`, { cause: error });
             const newArgs = [newError, ...args.slice(1)];
             if (defaultMethod) defaultMethod(...newArgs);
             return;
