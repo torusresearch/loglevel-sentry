@@ -16,7 +16,7 @@ interface AxiosResponse {
   headers: Record<string, string>;
 }
 
-export default class LoglevelSentry {
+export class LoglevelSentry {
   private sentry: Sentry;
 
   private category: string;
