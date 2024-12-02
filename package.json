@@ -22,25 +22,25 @@
   ],
   "peerDependencies": {
     "@babel/runtime": "^7.x",
-    "@sentry/core": "^8.x",
-    "@sentry/types": "^8.x"
+    "@sentry/core": ">=8.41.0",
+    "@sentry/types": ">=8.41.0"
   },
   "dependencies": {
-    "loglevel": "^1.9.1",
-    "@sentry/utils": "^8.25.0"
+    "loglevel": "^1.9.2",
+    "@sentry/utils": "^8.41.0"
   },
   "devDependencies": {
-    "@sentry/core": "^8.25.0",
-    "@sentry/types": "^8.25.0",
+    "@sentry/core": "^8.41.0",
+    "@sentry/types": "^8.41.0",
     "@toruslabs/config": "^2.2.0",
-    "@toruslabs/eslint-config-typescript": "^3.3.3",
-    "@toruslabs/torus-scripts": "^6.1.1",
+    "@toruslabs/eslint-config-typescript": "^3.3.4",
+    "@toruslabs/torus-scripts": "^6.1.6",
     "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
-    "husky": "^9.1.4",
-    "lint-staged": "^15.2.8",
-    "prettier": "^3.3.3",
-    "typescript": "^5.5.4"
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.4.1",
+    "typescript": "^5.7.2"
   },
   "author": "Torus Labs",
   "repository": {
