@@ -45,7 +45,7 @@ function redactInternalBreadcrumbData<T = unknown>(data: T): T {
       } else {
         try {
           result[k] = redactInternalBreadcrumbData(v);
-        } catch (error) {
+        } catch {
           // We are not able to redact the value
           result[k] = "***" as unknown as T[Extract<keyof T, string>];
         }
