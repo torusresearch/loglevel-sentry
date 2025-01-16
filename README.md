@@ -17,8 +17,8 @@ This repo allows you to log + track logs using sentry
 
 This module is distributed in 3 formats
 
-- `esm` build `dist/loglevelSentry.esm.js` in es6 format
-- `commonjs` build `dist/loglevelSentry.cjs.js` in es5 format
+- `lib.esm` build `dist/lib.esm/index.js` in es6 format
+- `lib.cjs` build `dist/lib.cjs/index.js` in es5 format
 - `umd` build `dist/loglevelSentry.umd.min.js` in es5 format without polyfilling corejs minified
 
 By default, the appropriate format is used for your specified usecase
