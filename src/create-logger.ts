@@ -1,8 +1,9 @@
+import type * as Sentry from "@sentry/core";
 import loglevel, { Logger } from "loglevel";
 
-import { LoglevelSentry as SentryPlugin, Sentry } from "./loglevel-sentry";
+import { LoglevelSentry as SentryPlugin } from "./loglevel-sentry";
 
-export function createLogger(name: string, sentry: Sentry): Logger {
+export function createLogger(name: string, sentry: typeof Sentry): Logger {
   const logger = loglevel.getLogger(name);
   logger.enableAll();
 

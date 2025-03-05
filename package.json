@@ -6,7 +6,7 @@
   "module": "dist/lib.esm/index.js",
   "unpkg": "dist/loglevelSentry.umd.min.js",
   "jsdelivr": "dist/loglevelSentry.umd.min.js",
-  "types": "dist/types/index.d.ts",
+  "types": "dist/lib.cjs/types/index.d.ts",
   "sideEffects": false,
   "scripts": {
     "start": "torus-scripts start",
@@ -22,25 +22,24 @@
   ],
   "peerDependencies": {
     "@babel/runtime": "^7.x",
-    "@sentry/core": ">=8.42.0",
-    "@sentry/types": ">=8.42.0"
+    "@sentry/core": "^9.x",
+    "@sentry/types": "^9.x"
   },
   "dependencies": {
-    "@sentry/utils": "^8.50.0",
     "loglevel": "^1.9.2"
   },
   "devDependencies": {
-    "@sentry/core": "^8.50.0",
-    "@sentry/types": "^8.50.0",
-    "@toruslabs/config": "^3.0.1",
-    "@toruslabs/eslint-config-typescript": "^4.0.4",
-    "@toruslabs/torus-scripts": "^7.0.4",
+    "@sentry/core": "^9.3.0",
+    "@sentry/types": "^9.3.0",
+    "@toruslabs/config": "^3.1.0",
+    "@toruslabs/eslint-config-typescript": "^4.1.0",
+    "@toruslabs/torus-scripts": "^7.1.2",
     "cross-env": "^7.0.3",
-    "eslint": "^9.18.0",
+    "eslint": "^9.21.0",
     "husky": "^9.1.7",
-    "lint-staged": "^15.4.1",
-    "prettier": "^3.4.2",
-    "typescript": "^5.7.3"
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
   },
   "author": "Torus Labs",
   "repository": {
