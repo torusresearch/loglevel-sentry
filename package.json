@@ -1,6 +1,6 @@
 {
   "name": "@toruslabs/loglevel-sentry",
-  "version": "7.2.0",
+  "version": "8.0.0",
   "description": "A package to allow logging and monitoring with sentry",
   "main": "dist/lib.cjs/index.js",
   "module": "dist/lib.esm/index.js",
