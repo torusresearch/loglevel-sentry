@@ -1,4 +1,4 @@
-import { normalize } from "@sentry/utils";
+import type * as Sentry from "@sentry/core";
 
 const defaultPattern = /(private|key|secret|authorization|address|email|login_hint)+/i;
 
@@ -20,8 +20,8 @@ function redactInternalEventData<T = unknown>(data: T, keyPattern = defaultPatte
   return data;
 }
 
-export function redactEventData<T = unknown>(data: T, keyPattern = defaultPattern, maxDepth = 8): T {
-  const normalizedData = normalize(data, maxDepth);
+export function redactEventData<T = unknown>(sentry: typeof Sentry, data: T, keyPattern = defaultPattern, maxDepth = 8): T {
+  const normalizedData = sentry.normalize(data, maxDepth);
   return redactInternalEventData(normalizedData, keyPattern);
 }
 
@@ -45,7 +45,7 @@ function redactInternalBreadcrumbData<T = unknown>(data: T): T {
       } else {
         try {
           result[k] = redactInternalBreadcrumbData(v);
-        } catch (error) {
+        } catch {
           // We are not able to redact the value
           result[k] = "***" as unknown as T[Extract<keyof T, string>];
         }
@@ -55,8 +55,8 @@ function redactInternalBreadcrumbData<T = unknown>(data: T): T {
   return result;
 }
 
-export function redactBreadcrumbData<T = unknown>(data: T, maxDepth = 8): T {
+export function redactBreadcrumbData<T = unknown>(sentry: typeof Sentry, data: T, maxDepth = 8): T {
   if (!data) return data;
-  const normalizedData = normalize(data, maxDepth);
+  const normalizedData = sentry.normalize(data, maxDepth);
   return redactInternalBreadcrumbData(normalizedData);
 }

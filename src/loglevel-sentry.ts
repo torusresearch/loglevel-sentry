@@ -1,14 +1,5 @@
-import type { Breadcrumb, CaptureContext, Client, Scope, SeverityLevel, Span } from "@sentry/types";
-import { normalize } from "@sentry/utils";
-import { Logger } from "loglevel";
-
-export interface Sentry {
-  getClient<C extends Client>(): C | undefined;
-  captureException(exception: unknown, captureContext?: CaptureContext): string;
-  addBreadcrumb(breadcrumb: Breadcrumb): void;
-  getCurrentScope(): Scope;
-  getActiveSpan(): Span | undefined;
-}
+import type * as Sentry from "@sentry/core";
+import { type Logger } from "loglevel";
 
 interface AxiosResponse {
   data: unknown;
@@ -17,11 +8,11 @@ interface AxiosResponse {
 }
 
 export class LoglevelSentry {
-  private sentry: Sentry;
+  private sentry: typeof Sentry;
 
   private category: string;
 
-  constructor(sentry: Sentry) {
+  constructor(sentry: typeof Sentry) {
     this.sentry = sentry;
     this.category = "loglevel-sentry";
   }
@@ -67,7 +58,7 @@ export class LoglevelSentry {
     return [err, args];
   }
 
-  private static translateArgs(args: unknown[]): Pick<Breadcrumb, "data" | "message"> {
+  private static translateArgs(args: unknown[]): Pick<Sentry.Breadcrumb, "data" | "message"> {
     const msgIndex = args.findIndex((arg) => typeof arg === "string");
     const firstMsg = msgIndex !== -1 ? (args.splice(msgIndex, 1)[0] as string) : undefined;
     return firstMsg
@@ -79,7 +70,7 @@ export class LoglevelSentry {
       : { data: { arguments: args } };
   }
 
-  private static translateLevel(level: string): SeverityLevel {
+  private static translateLevel(level: string): Sentry.SeverityLevel {
     switch (level) {
       case "info":
         return "info";
@@ -100,7 +91,8 @@ export class LoglevelSentry {
       const isFrontend = typeof window !== "undefined";
 
       const overrideDefaultMethod = (...args: unknown[]) => {
-        const { traceId, spanId } = this.sentry.getActiveSpan()?.spanContext() || {};
+        const currentSpan = this.sentry.getActiveSpan();
+        const { traceId, spanId } = currentSpan?.spanContext() || {};
         const isError = method === "error" && args.length >= 1 && args[0] instanceof Error;
         if (isFrontend) {
           if (isError) {
@@ -119,7 +111,7 @@ export class LoglevelSentry {
           } else {
             logData = { ...logData, message: args[0] ?? "", extra: args.length > 1 ? args.slice(1) : undefined };
           }
-          if (defaultMethod) defaultMethod(JSON.stringify(normalize(logData)));
+          if (defaultMethod) defaultMethod(JSON.stringify(this.sentry.normalize(logData)));
         }
       };
 
@@ -145,14 +137,18 @@ export class LoglevelSentry {
   }
 
   setEnabled(enabled: boolean): void {
-    this.sentry.getClient().getOptions().enabled = enabled;
+    const options = this.sentry.getClient().getOptions();
+    if (options) {
+      options.enabled = enabled;
+    }
   }
 
   isEnabled(): boolean {
-    return this.sentry.getClient().getOptions().enabled;
+    const options = this.sentry.getClient().getOptions();
+    return options?.enabled ?? false;
   }
 
-  log(level: SeverityLevel, ...args: unknown[]): void {
+  log(level: Sentry.SeverityLevel, ...args: unknown[]): void {
     this.sentry.addBreadcrumb({
       ...LoglevelSentry.translateArgs(args),
       category: this.category,
@@ -166,9 +162,13 @@ export class LoglevelSentry {
   }
 
   error(err: Error, ...args: unknown[]): void {
-    this.sentry.captureException(err, {
-      tags: { logger: "loglevel-sentry", "logger.name": this.category },
-      extra: { arguments: args },
-    });
+    const eventHint = {
+      data: {
+        logger: "loglevel-sentry",
+        "logger.name": this.category,
+        arguments: args,
+      },
+    };
+    this.sentry.captureException(err, eventHint);
   }
 }
