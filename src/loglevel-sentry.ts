@@ -1,4 +1,4 @@
-import type * as Sentry from "@sentry/core";
+import { addBreadcrumb, Breadcrumb, captureException, getActiveSpan, getClient, normalize, SeverityLevel } from "@sentry/core";
 import { type Logger } from "loglevel";
 
 interface AxiosResponse {
@@ -7,12 +7,19 @@ interface AxiosResponse {
   headers: Record<string, string>;
 }
 
+export interface Sentry {
+  addBreadcrumb: typeof addBreadcrumb;
+  captureException: typeof captureException;
+  getActiveSpan: typeof getActiveSpan;
+  getClient: typeof getClient;
+}
+
 export class LoglevelSentry {
-  private sentry: typeof Sentry;
+  private sentry: Sentry;
 
   private category: string;
 
-  constructor(sentry: typeof Sentry) {
+  constructor(sentry: Sentry) {
     this.sentry = sentry;
     this.category = "loglevel-sentry";
   }
@@ -58,7 +65,7 @@ export class LoglevelSentry {
     return [err, args];
   }
 
-  private static translateArgs(args: unknown[]): Pick<Sentry.Breadcrumb, "data" | "message"> {
+  private static translateArgs(args: unknown[]): Pick<Breadcrumb, "data" | "message"> {
     const msgIndex = args.findIndex((arg) => typeof arg === "string");
     const firstMsg = msgIndex !== -1 ? (args.splice(msgIndex, 1)[0] as string) : undefined;
     return firstMsg
@@ -70,7 +77,7 @@ export class LoglevelSentry {
       : { data: { arguments: args } };
   }
 
-  private static translateLevel(level: string): Sentry.SeverityLevel {
+  private static translateLevel(level: string): SeverityLevel {
     switch (level) {
       case "info":
         return "info";
@@ -111,7 +118,7 @@ export class LoglevelSentry {
           } else {
             logData = { ...logData, message: args[0] ?? "", extra: args.length > 1 ? args.slice(1) : undefined };
           }
-          if (defaultMethod) defaultMethod(JSON.stringify(this.sentry.normalize(logData)));
+          if (defaultMethod) defaultMethod(JSON.stringify(normalize(logData)));
         }
       };
 
@@ -148,7 +155,7 @@ export class LoglevelSentry {
     return options?.enabled ?? false;
   }
 
-  log(level: Sentry.SeverityLevel, ...args: unknown[]): void {
+  log(level: SeverityLevel, ...args: unknown[]): void {
     this.sentry.addBreadcrumb({
       ...LoglevelSentry.translateArgs(args),
       category: this.category,
