@@ -22,8 +22,7 @@
   ],
   "peerDependencies": {
     "@babel/runtime": "^7.x",
-    "@sentry/core": "^9.x",
-    "@sentry/types": "^9.x"
+    "@sentry/core": "^9.x"
   },
   "dependencies": {
     "loglevel": "^1.9.2"
