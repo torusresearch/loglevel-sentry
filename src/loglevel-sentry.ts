@@ -45,15 +45,19 @@ export class LoglevelSentry {
     } else if (axiosErrorIdx !== -1) {
       const axiosError = args[axiosErrorIdx] as { response: AxiosResponse };
       const errorResponse = axiosError.response;
-      const contentType = errorResponse.headers?.["content-type"];
-      if (contentType.includes("application/json")) {
-        const errJson = errorResponse.data as object;
-        const errorMsg = "error" in errJson ? errJson.error : "message" in errJson ? errJson.message : JSON.stringify(errJson);
-        err = new Error(errorMsg as string);
-      } else if (contentType.includes("text/plain")) {
-        err = new Error(errorResponse.data as string);
+      if (errorResponse) {
+        const contentType = errorResponse.headers?.["content-type"];
+        if (contentType.includes("application/json")) {
+          const errJson = errorResponse.data as object;
+          const errorMsg = "error" in errJson ? errJson.error : "message" in errJson ? errJson.message : JSON.stringify(errJson);
+          err = new Error(errorMsg as string);
+        } else if (contentType.includes("text/plain")) {
+          err = new Error(errorResponse.data as string);
+        } else {
+          err = new Error(`${errorResponse.status} ${errorResponse.data.toString()}`);
+        }
       } else {
-        err = new Error(`${errorResponse.status} ${errorResponse.data.toString()}`);
+        err = new Error("Network error");
       }
     } else if (index !== -1) {
       err = args.splice(index, 1)[0] as Error;
