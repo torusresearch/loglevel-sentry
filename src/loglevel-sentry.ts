@@ -25,7 +25,6 @@ export class LoglevelSentry {
   }
 
   private static async translateError(args: unknown[]): Promise<[Error, unknown[]]> {
-    // Find first Error or create an "unknown" Error to keep stack trace.
     const index = args.findIndex((arg) => arg instanceof Error);
     const msgIndex = args.findIndex((arg) => typeof arg === "string");
     const apiErrorIdx = args.findIndex((arg) => arg && typeof arg === "object" && "status" in arg && "type" in arg);
@@ -129,7 +128,11 @@ export class LoglevelSentry {
       switch (method) {
         case "error":
           return async (...args: unknown[]) => {
+            // stack trace is lost when using async/await
+            const { stack } = new Error();
             const [err, otherArgs] = await LoglevelSentry.translateError(args);
+            // set original stack trace
+            err.stack = stack;
 
             this.error(err, ...otherArgs);
             overrideDefaultMethod(err, ...otherArgs);
