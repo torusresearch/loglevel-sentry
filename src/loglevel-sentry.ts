@@ -138,10 +138,9 @@ export class LoglevelSentry {
       switch (method) {
         case "error":
           return async (...args: unknown[]) => {
-            // stack trace is lost when using async/await
-            const { stack } = new Error();
+            // preserve original stack trace as it's lost when using async/await
+            const { stack } = args.find((arg) => arg instanceof Error) || new Error();
             const [err, otherArgs] = await LoglevelSentry.translateError(args);
-            // set original stack trace
             err.stack = stack;
 
             this.error(err, ...otherArgs);
@@ -193,13 +192,15 @@ export class LoglevelSentry {
   }
 
   error(err: Error, ...args: unknown[]): void {
-    const eventHint = {
-      data: {
-        logger: "loglevel-sentry",
-        "logger.name": this.category,
-        arguments: args,
-      },
-    };
-    if (this.sentry) this.sentry.captureException(err, eventHint);
+    if (this.sentry) {
+      const eventHint = {
+        data: {
+          logger: "loglevel-sentry",
+          "logger.name": this.category,
+          arguments: args,
+        },
+      };
+      this.sentry.captureException(err, eventHint);
+    }
   }
 }
