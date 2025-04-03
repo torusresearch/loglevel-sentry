@@ -1,4 +1,12 @@
-import { addBreadcrumb, Breadcrumb, captureException, getActiveSpan, getClient, normalize, SeverityLevel } from "@sentry/core";
+import {
+  type addBreadcrumb,
+  type Breadcrumb,
+  type captureException,
+  type getActiveSpan,
+  type getClient,
+  normalize,
+  type SeverityLevel,
+} from "@sentry/core";
 import { type Logger } from "loglevel";
 
 interface AxiosResponse {
@@ -15,11 +23,11 @@ export interface Sentry {
 }
 
 export class LoglevelSentry {
-  private sentry: Sentry;
+  private sentry?: Sentry;
 
   private category: string;
 
-  constructor(sentry: Sentry) {
+  constructor(sentry?: Sentry) {
     this.sentry = sentry;
     this.category = "loglevel-sentry";
   }
@@ -101,20 +109,22 @@ export class LoglevelSentry {
       const isFrontend = typeof window !== "undefined";
 
       const overrideDefaultMethod = (...args: unknown[]) => {
-        const currentSpan = this.sentry.getActiveSpan();
+        const currentSpan = this.sentry?.getActiveSpan();
         const { traceId, spanId } = currentSpan?.spanContext() || {};
         const isError = method === "error" && args.length >= 1 && args[0] instanceof Error;
         if (isFrontend) {
           if (isError) {
             const error = args[0] as Error;
-            const newError = new Error(`${error.message}: traceId: ${traceId} - spanId: ${spanId}`, { cause: error });
+            const errMsg = traceId || spanId ? `${error.message}: traceId: ${traceId} - spanId: ${spanId}` : error.message;
+            const newError = new Error(errMsg, { cause: error });
             const newArgs = [newError, ...args.slice(1)];
             if (defaultMethod) defaultMethod(...newArgs);
             return;
           }
           if (defaultMethod) defaultMethod(...args);
         } else {
-          let logData: Record<string, unknown> = { timestamp: new Date(), level: method.toUpperCase(), logger: name, traceId, spanId };
+          let logData: Record<string, unknown> = { timestamp: new Date(), level: method.toUpperCase(), logger: name };
+          if (traceId || spanId) logData = { ...logData, traceId, spanId };
           if (isError) {
             const error = args[0] as Error;
             logData = { ...logData, message: error.message ?? "", stack: error.stack, extra: args.length > 1 ? args.slice(1) : undefined };
@@ -151,24 +161,31 @@ export class LoglevelSentry {
   }
 
   setEnabled(enabled: boolean): void {
-    const options = this.sentry.getClient().getOptions();
-    if (options) {
-      options.enabled = enabled;
+    if (this.sentry) {
+      const options = this.sentry.getClient().getOptions();
+      if (options) {
+        options.enabled = enabled;
+      }
     }
   }
 
   isEnabled(): boolean {
-    const options = this.sentry.getClient().getOptions();
-    return options?.enabled ?? false;
+    if (this.sentry) {
+      const options = this.sentry.getClient().getOptions();
+      return options?.enabled ?? false;
+    }
+    return false;
   }
 
   log(level: SeverityLevel, ...args: unknown[]): void {
-    this.sentry.addBreadcrumb({
-      ...LoglevelSentry.translateArgs(args),
-      category: this.category,
-      level,
-      timestamp: Date.now(),
-    });
+    if (this.sentry) {
+      this.sentry.addBreadcrumb({
+        ...LoglevelSentry.translateArgs(args),
+        category: this.category,
+        level,
+        timestamp: Date.now(),
+      });
+    }
   }
 
   trace(...args: unknown[]): void {
@@ -183,6 +200,6 @@ export class LoglevelSentry {
         arguments: args,
       },
     };
-    this.sentry.captureException(err, eventHint);
+    if (this.sentry) this.sentry.captureException(err, eventHint);
   }
 }
