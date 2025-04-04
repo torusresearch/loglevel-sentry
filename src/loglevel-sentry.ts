@@ -1,4 +1,12 @@
-import { addBreadcrumb, Breadcrumb, captureException, getActiveSpan, getClient, normalize, SeverityLevel } from "@sentry/core";
+import {
+  type addBreadcrumb,
+  type Breadcrumb,
+  type captureException,
+  type getActiveSpan,
+  type getClient,
+  normalize,
+  type SeverityLevel,
+} from "@sentry/core";
 import { type Logger } from "loglevel";
 
 interface AxiosResponse {
@@ -15,17 +23,16 @@ export interface Sentry {
 }
 
 export class LoglevelSentry {
-  private sentry: Sentry;
+  private sentry?: Sentry;
 
   private category: string;
 
-  constructor(sentry: Sentry) {
+  constructor(sentry?: Sentry) {
     this.sentry = sentry;
     this.category = "loglevel-sentry";
   }
 
   private static async translateError(args: unknown[]): Promise<[Error, unknown[]]> {
-    // Find first Error or create an "unknown" Error to keep stack trace.
     const index = args.findIndex((arg) => arg instanceof Error);
     const msgIndex = args.findIndex((arg) => typeof arg === "string");
     const apiErrorIdx = args.findIndex((arg) => arg && typeof arg === "object" && "status" in arg && "type" in arg);
@@ -45,15 +52,19 @@ export class LoglevelSentry {
     } else if (axiosErrorIdx !== -1) {
       const axiosError = args[axiosErrorIdx] as { response: AxiosResponse };
       const errorResponse = axiosError.response;
-      const contentType = errorResponse.headers?.["content-type"];
-      if (contentType.includes("application/json")) {
-        const errJson = errorResponse.data as object;
-        const errorMsg = "error" in errJson ? errJson.error : "message" in errJson ? errJson.message : JSON.stringify(errJson);
-        err = new Error(errorMsg as string);
-      } else if (contentType.includes("text/plain")) {
-        err = new Error(errorResponse.data as string);
+      if (errorResponse) {
+        const contentType = errorResponse.headers?.["content-type"];
+        if (contentType.includes("application/json")) {
+          const errJson = errorResponse.data as object;
+          const errorMsg = "error" in errJson ? errJson.error : "message" in errJson ? errJson.message : JSON.stringify(errJson);
+          err = new Error(errorMsg as string);
+        } else if (contentType.includes("text/plain")) {
+          err = new Error(errorResponse.data as string);
+        } else {
+          err = new Error(`${errorResponse.status} ${errorResponse.data.toString()}`);
+        }
       } else {
-        err = new Error(`${errorResponse.status} ${errorResponse.data.toString()}`);
+        err = new Error("Network error");
       }
     } else if (index !== -1) {
       err = args.splice(index, 1)[0] as Error;
@@ -98,20 +109,22 @@ export class LoglevelSentry {
       const isFrontend = typeof window !== "undefined";
 
       const overrideDefaultMethod = (...args: unknown[]) => {
-        const currentSpan = this.sentry.getActiveSpan();
+        const currentSpan = this.sentry?.getActiveSpan();
         const { traceId, spanId } = currentSpan?.spanContext() || {};
         const isError = method === "error" && args.length >= 1 && args[0] instanceof Error;
         if (isFrontend) {
           if (isError) {
             const error = args[0] as Error;
-            const newError = new Error(`${error.message}: traceId: ${traceId} - spanId: ${spanId}`, { cause: error });
+            const errMsg = traceId || spanId ? `${error.message}: traceId: ${traceId} - spanId: ${spanId}` : error.message;
+            const newError = new Error(errMsg, { cause: error });
             const newArgs = [newError, ...args.slice(1)];
             if (defaultMethod) defaultMethod(...newArgs);
             return;
           }
           if (defaultMethod) defaultMethod(...args);
         } else {
-          let logData: Record<string, unknown> = { timestamp: new Date(), level: method.toUpperCase(), logger: name, traceId, spanId };
+          let logData: Record<string, unknown> = { timestamp: new Date(), level: method.toUpperCase(), logger: name };
+          if (traceId || spanId) logData = { ...logData, traceId, spanId };
           if (isError) {
             const error = args[0] as Error;
             logData = { ...logData, message: error.message ?? "", stack: error.stack, extra: args.length > 1 ? args.slice(1) : undefined };
@@ -125,7 +138,10 @@ export class LoglevelSentry {
       switch (method) {
         case "error":
           return async (...args: unknown[]) => {
+            // preserve original stack trace as it's lost when using async/await
+            const { stack } = args.find((arg) => arg instanceof Error) || new Error();
             const [err, otherArgs] = await LoglevelSentry.translateError(args);
+            err.stack = stack;
 
             this.error(err, ...otherArgs);
             overrideDefaultMethod(err, ...otherArgs);
@@ -144,24 +160,31 @@ export class LoglevelSentry {
   }
 
   setEnabled(enabled: boolean): void {
-    const options = this.sentry.getClient().getOptions();
-    if (options) {
-      options.enabled = enabled;
+    if (this.sentry) {
+      const options = this.sentry.getClient().getOptions();
+      if (options) {
+        options.enabled = enabled;
+      }
     }
   }
 
   isEnabled(): boolean {
-    const options = this.sentry.getClient().getOptions();
-    return options?.enabled ?? false;
+    if (this.sentry) {
+      const options = this.sentry.getClient().getOptions();
+      return options?.enabled ?? false;
+    }
+    return false;
   }
 
   log(level: SeverityLevel, ...args: unknown[]): void {
-    this.sentry.addBreadcrumb({
-      ...LoglevelSentry.translateArgs(args),
-      category: this.category,
-      level,
-      timestamp: Date.now(),
-    });
+    if (this.sentry) {
+      this.sentry.addBreadcrumb({
+        ...LoglevelSentry.translateArgs(args),
+        category: this.category,
+        level,
+        timestamp: Date.now(),
+      });
+    }
   }
 
   trace(...args: unknown[]): void {
@@ -169,13 +192,15 @@ export class LoglevelSentry {
   }
 
   error(err: Error, ...args: unknown[]): void {
-    const eventHint = {
-      data: {
-        logger: "loglevel-sentry",
-        "logger.name": this.category,
-        arguments: args,
-      },
-    };
-    this.sentry.captureException(err, eventHint);
+    if (this.sentry) {
+      const eventHint = {
+        data: {
+          logger: "loglevel-sentry",
+          "logger.name": this.category,
+          arguments: args,
+        },
+      };
+      this.sentry.captureException(err, eventHint);
+    }
   }
 }
