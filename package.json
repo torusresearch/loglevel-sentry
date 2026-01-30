@@ -12,9 +12,11 @@
     "start": "torus-scripts start",
     "build": "torus-scripts build",
     "release": "torus-scripts release",
-    "lint:ts": "eslint --fix 'src/**/*.ts'",
+    "lint": "torus-scripts lint",
     "prepack": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:node": "vitest run --config ./test/configs/node.config.mts --coverage",
+    "test:browsers": "vitest run --config ./test/configs/browsers.config.mts --coverage",
+    "test": "npm run test:node && npm run test:browsers",
     "prepare": "husky"
   },
   "files": [
@@ -28,15 +30,21 @@
     "@sentry/core": "^10.38.0"
   },
   "devDependencies": {
+    "@sentry/browser": "^10.38.0",
+    "@sentry/node": "^10.38.0",
     "@toruslabs/config": "^4.0.0",
     "@toruslabs/eslint-config-typescript": "^5.0.0",
     "@toruslabs/torus-scripts": "^8.0.0",
+    "@vitest/browser-playwright": "^4.0.17",
+    "@vitest/coverage-istanbul": "^4.0.17",
     "cross-env": "^10.1.0",
     "eslint": "^9.39.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "playwright": "^1.58.0",
     "prettier": "^3.8.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
   },
   "author": "Torus Labs",
   "repository": {
