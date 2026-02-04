@@ -90,6 +90,7 @@ describe("LoglevelSentry Node Integration", () => {
     it("should handle Axios errors without response (network error)", async () => {
       const axiosError = {
         isAxiosError: true,
+        // @ts-expect-error - response is optional
         response: undefined,
       };
 
