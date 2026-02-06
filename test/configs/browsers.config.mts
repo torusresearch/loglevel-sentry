@@ -10,7 +10,6 @@ export default defineConfig({
       headless: true,
       provider: playwright(),
       enabled: true,
-      testerHtmlPath: "./test/test.html",
       instances: [
         { name: "Chrome", browser: "chromium" },
         { name: "Firefox", browser: "firefox" },
