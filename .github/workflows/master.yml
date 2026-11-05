@@ -9,7 +9,7 @@ jobs:
     name: run tests
     strategy:
       matrix:
-        node: ["24.x"]
+        node: ["24.x", "26.x"]
         os: [ubuntu-latest]
 
     runs-on: ${{ matrix.os }}
