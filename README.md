@@ -15,17 +15,12 @@ This repo allows you to log + track logs using sentry
 
 ### Bundling
 
-This module is distributed in 3 formats
+This module is distributed in 2 formats
 
-- `lib.esm` build `dist/lib.esm/index.js` in es6 format
-- `lib.cjs` build `dist/lib.cjs/index.js` in es5 format
-- `umd` build `dist/loglevelSentry.umd.min.js` in es5 format without polyfilling corejs minified
+- `lib.esm` build `dist/lib.esm/index.js`
+- `lib.cjs` build `dist/lib.cjs/index.js`
 
-By default, the appropriate format is used for your specified usecase
-You can use a different format (if you know what you're doing) by referencing the correct file
-
-The cjs build is not polyfilled with core-js.
-It is upto the user to polyfill based on the browserlist they target
+Types are published at `dist/lib.cjs/index.d.ts`. The package does not include a UMD bundle or a core-js polyfill.
 
 ### Directly in Browser
 
@@ -55,10 +50,10 @@ To use this module:
 2. Create your `loglevel` instance and install this plugin to enable Sentry:
 
 ```js
-import loglevel from "loglevel";
 import * as Sentry from "@sentry/browser";
 // Node.js: import * as Sentry from "@sentry/node";
-import LoglevelSentryPlugin from "@toruslabs/loglevel-sentry";
+import { LoglevelSentry as LoglevelSentryPlugin } from "@toruslabs/loglevel-sentry";
+import loglevel from "loglevel";
 
 logger = loglevel.getLogger("__LOGGER_NAME__");
 
@@ -69,11 +64,11 @@ sentry.install(logger);
 (Optional) You can replace loglevel with other logging library by using loglevel `methodFactory` API:
 
 ```js
-import loglevel from "loglevel";
-import pino from "pino";
 import * as Sentry from "@sentry/browser";
 // Node.js: import * as Sentry from "@sentry/node";
-import LoglevelSentryPlugin from "@toruslabs/loglevel-sentry";
+import { LoglevelSentry as LoglevelSentryPlugin } from "@toruslabs/loglevel-sentry";
+import loglevel from "loglevel";
+import pino from "pino";
 
 const logger = loglevel.getLogger("__LOGGER_NAME__");
 logger.methodFactory = (method, level, name) => {
@@ -108,5 +103,5 @@ sentry.trace("this", "message", "will always be reported.");
 
 ## Requirements
 
-- This package requires a peer dependency of `@babel/runtime`
-- Node 20+
+- Node.js >=24.22.0 and npm >=12
+- `@sentry/browser` or `@sentry/node`, depending on the runtime

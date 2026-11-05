@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/browser";
 import loglevel from "loglevel";
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { LoglevelSentry } from "../src/loglevel-sentry";
 
