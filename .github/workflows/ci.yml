@@ -5,11 +5,12 @@ on:
   push:
     branches: [master]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: run tests
-    permissions:
-      contents: read
     strategy:
       matrix:
         node: ["24.22", "26"]
@@ -61,8 +62,6 @@ jobs:
 
   release-notes:
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'changeset-release/')
-    permissions:
-      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
