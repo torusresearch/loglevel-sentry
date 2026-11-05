@@ -3,6 +3,7 @@ name: Validate
 on:
   pull_request:
   push:
+    branches: [master]
 
 jobs:
   test:
@@ -50,10 +51,10 @@ jobs:
         run: npm run build
 
       - name: Install playwright webkit
-        run: npx playwright install-deps webkit
+        run: npm exec -- playwright install-deps webkit
 
       - name: Install browsers
-        run: npx playwright install
+        run: npm exec -- playwright install
 
       - name: Run tests
         run: npm run test
