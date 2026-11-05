@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/node";
 import loglevel from "loglevel";
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { LoglevelSentry } from "../src/loglevel-sentry";
 
@@ -90,7 +90,6 @@ describe("LoglevelSentry Node Integration", () => {
     it("should handle Axios errors without response (network error)", async () => {
       const axiosError = {
         isAxiosError: true,
-        // @ts-expect-error - response is optional
         response: undefined,
       };
 

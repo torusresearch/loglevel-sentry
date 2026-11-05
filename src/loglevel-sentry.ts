@@ -41,10 +41,10 @@ export class LoglevelSentry {
     if (apiErrorIdx !== -1) {
       const apiError = args[apiErrorIdx] as Response;
       const contentType = apiError.headers?.get("content-type");
-      if (contentType.includes("application/json")) {
+      if (contentType?.includes("application/json")) {
         const errJson = await apiError.json();
         err = new Error(errJson?.error || errJson?.message || JSON.stringify(errJson));
-      } else if (contentType.includes("text/plain")) {
+      } else if (contentType?.includes("text/plain")) {
         err = new Error(await apiError.text());
       } else {
         err = new Error(`${apiError.status} ${apiError.type.toString()} ${apiError.statusText}`);
@@ -54,14 +54,14 @@ export class LoglevelSentry {
       const errorResponse = axiosError.response;
       if (errorResponse) {
         const contentType = errorResponse.headers?.["content-type"];
-        if (contentType.includes("application/json")) {
+        if (contentType?.includes("application/json")) {
           const errJson = errorResponse.data as object;
           const errorMsg = "error" in errJson ? errJson.error : "message" in errJson ? errJson.message : JSON.stringify(errJson);
           err = new Error(errorMsg as string);
-        } else if (contentType.includes("text/plain")) {
+        } else if (contentType?.includes("text/plain")) {
           err = new Error(errorResponse.data as string);
         } else {
-          err = new Error(`${errorResponse.status} ${errorResponse.data.toString()}`);
+          err = new Error(`${errorResponse.status} ${String(errorResponse.data)}`);
         }
       } else {
         err = new Error("Network error");
@@ -161,7 +161,7 @@ export class LoglevelSentry {
 
   setEnabled(enabled: boolean): void {
     if (this.sentry) {
-      const options = this.sentry.getClient().getOptions();
+      const options = this.sentry.getClient()?.getOptions();
       if (options) {
         options.enabled = enabled;
       }
@@ -170,7 +170,7 @@ export class LoglevelSentry {
 
   isEnabled(): boolean {
     if (this.sentry) {
-      const options = this.sentry.getClient().getOptions();
+      const options = this.sentry.getClient()?.getOptions();
       return options?.enabled ?? false;
     }
     return false;

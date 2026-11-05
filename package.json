@@ -6,26 +6,24 @@
   "module": "dist/lib.esm/index.js",
   "unpkg": "dist/lib.esm/index.js",
   "jsdelivr": "dist/lib.esm/index.js",
-  "types": "dist/lib.cjs/types/index.d.ts",
+  "types": "dist/lib.cjs/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "start": "torus-scripts start",
-    "build": "torus-scripts build",
-    "release": "torus-scripts release",
-    "lint": "torus-scripts lint",
+    "build": "vp pack",
+    "lint": "vp lint --fix",
+    "fmt": "vp fmt",
+    "check": "vp check",
+    "typecheck": "tsc --noEmit",
     "harden": "harden check --package-manager npm --level moderate",
     "prepack": "npm run build",
-    "test:node": "vitest run --config ./test/configs/node.config.mts --coverage",
-    "test:browsers": "vitest run --config ./test/configs/browsers.config.mts --coverage",
+    "test:node": "vp test run --config ./test/configs/node.config.mts --coverage",
+    "test:browsers": "vp test run --config ./test/configs/browsers.config.mts --coverage",
     "test": "npm run test:node && npm run test:browsers",
     "prepare": "husky"
   },
   "files": [
     "dist"
   ],
-  "peerDependencies": {
-    "@babel/runtime": "^7.x"
-  },
   "dependencies": {
     "@sentry/core": "^10.38.0",
     "loglevel": "^1.9.2"
@@ -34,19 +32,18 @@
     "@lavamoat/harden": "^0.8.1",
     "@sentry/browser": "^10.38.0",
     "@sentry/node": "^10.38.0",
-    "@toruslabs/config": "^4.0.0",
-    "@toruslabs/eslint-config-typescript": "^5.0.0",
-    "@toruslabs/torus-scripts": "^8.0.0",
-    "@vitest/browser-playwright": "^4.0.17",
-    "@vitest/coverage-istanbul": "^4.0.17",
-    "cross-env": "^10.1.0",
-    "eslint": "^9.39.2",
+    "@toruslabs/config": "^5.0.0",
+    "@toruslabs/oxlint-config-typescript": "^1.1.0",
+    "@toruslabs/torus-scripts": "^9.0.1",
+    "@vitest/browser-playwright": "5.1.0",
+    "@vitest/coverage-istanbul": "5.1.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "playwright": "^1.58.1",
-    "prettier": "^3.8.1",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.17"
+    "typescript": "^7.0.2",
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.5.0",
+    "vite-plus": "1.5.0",
+    "vitest": "5.1.0"
   },
   "author": "Torus Labs",
   "repository": {
@@ -54,12 +51,11 @@
     "url": "git+https://github.com/torusresearch/loglevel-sentry.git"
   },
   "lint-staged": {
-    "*.{ts,js}": [
-      "eslint --cache --fix",
-      "prettier --write"
+    "*.{js,mjs,cjs,ts,mts,cts,json,md,yml,yaml}": [
+      "vp fmt"
     ],
-    "*.{json}": [
-      "prettier --write"
+    "*.{js,mjs,cjs,ts,mts,cts}": [
+      "vp lint --fix"
     ]
   },
   "keywords": [
@@ -84,8 +80,10 @@
     }
   },
   "allowScripts": {
-    "esbuild@0.27.2": true,
-    "fsevents@2.3.3": true,
-    "unrs-resolver@1.11.1": true
+    "fsevents@2.3.3": true
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.5.0",
+    "vitest": "5.1.0"
   }
 }

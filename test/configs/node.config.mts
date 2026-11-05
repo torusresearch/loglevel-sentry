@@ -1,8 +1,9 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from "vite-plus/test/config";
 
 export default defineConfig({
   test: {
     include: ["test/node.test.ts"],
+    environment: "node",
     reporters: "verbose",
     coverage: {
       reporter: ["text"],
